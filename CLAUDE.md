@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 In-browser Whisper transcription. Static Astro site, no backend, no UI framework — plain
 TypeScript in `src/scripts` plus two Web Workers. See `README.md` for the user-facing story.
