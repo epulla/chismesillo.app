@@ -1,0 +1,42 @@
+---
+import { useTranslations } from '@/i18n/ui'
+import type { Lang } from '@/i18n/locales'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = useTranslations(lang)
+---
+
+<section id="status-dock" class="card bg-base-100 hidden shadow-sm">
+  <div class="card-body gap-4">
+    <div class="flex flex-wrap items-center gap-3">
+      <span id="status-spinner" class="loading loading-spinner loading-sm text-primary"></span>
+      <div class="min-w-0 flex-1">
+        <p id="status-text" class="font-medium">{t('status.preparing')}</p>
+        <p id="status-detail" class="text-xs opacity-60"></p>
+      </div>
+      <span id="status-percent" class="font-mono text-sm tabular-nums opacity-70"></span>
+    </div>
+
+    <progress id="status-progress" class="progress progress-primary w-full" value="0" max="100"
+    ></progress>
+
+    <p id="status-partial" class="hidden truncate text-xs italic opacity-50"></p>
+
+    <div id="download-row" class="hidden items-center gap-3 rounded-box bg-base-200 px-3 py-2">
+      <span class="text-sm">{t('downloads.whisper')}</span>
+      <progress
+        id="download-progress"
+        class="progress progress-secondary flex-1"
+        value="0"
+        max="100"></progress>
+      <span id="download-detail" class="font-mono text-xs tabular-nums opacity-70"></span>
+    </div>
+
+    <div id="warning-row" class="alert alert-warning hidden py-2 text-sm"></div>
+    <div id="error-row" class="alert alert-error hidden py-2 text-sm"></div>
+  </div>
+</section>

@@ -1,0 +1,31 @@
+@import 'tailwindcss';
+
+@plugin "daisyui" {
+  themes: pastel --default;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-dvh bg-base-200 text-base-content antialiased;
+  }
+}
+
+@layer components {
+  /* Dropzone hover/drag affordance */
+  .dropzone {
+    @apply border-2 border-dashed border-base-300 rounded-box transition-colors duration-150;
+  }
+
+  .dropzone.is-dragging {
+    @apply border-primary bg-primary/10;
+  }
+
+  /* Monospaced timecodes keep the transcript list from jittering */
+  .timecode {
+    @apply font-mono text-xs tabular-nums opacity-70;
+  }
+}

@@ -1,0 +1,38 @@
+---
+import { useTranslations } from '@/i18n/ui'
+import { languages, type Lang } from '@/i18n/locales'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = useTranslations(lang)
+---
+
+<header class="navbar bg-base-100/80 sticky top-0 z-30 border-b border-base-300 backdrop-blur">
+  <div class="mx-auto flex w-full max-w-5xl items-center gap-3 px-4">
+    <a href={lang === 'en' ? '/' : '/es/'} class="flex items-center gap-2 text-lg font-bold">
+      <span aria-hidden="true">🤫</span>
+      chismesillo
+    </a>
+    <span class="hidden text-sm opacity-70 sm:inline">{t('header.tagline')}</span>
+
+    <div class="ml-auto flex items-center gap-2">
+      <span class="badge badge-primary badge-sm whitespace-nowrap">{t('header.privacy')}</span>
+      <div class="join">
+        {
+          Object.entries(languages).map(([code, label]) => (
+            <a
+              href={code === 'en' ? '/' : `/${code}/`}
+              class:list={['btn btn-xs join-item', code === lang ? 'btn-primary' : 'btn-ghost']}
+              hreflang={code}
+            >
+              {label}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</header>

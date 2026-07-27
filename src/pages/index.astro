@@ -1,0 +1,28 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import Header from '@/components/Header.astro'
+import Hero from '@/components/Hero.astro'
+import UploadCard from '@/components/UploadCard.astro'
+import ConfigCard from '@/components/ConfigCard.astro'
+import StatusDock from '@/components/StatusDock.astro'
+import TranscriptCard from '@/components/TranscriptCard.astro'
+import Footer from '@/components/Footer.astro'
+
+const lang = 'en'
+---
+
+<Layout lang={lang}>
+  <Header lang={lang} />
+  <Hero lang={lang} />
+  <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 pb-12">
+    <UploadCard lang={lang} />
+    <ConfigCard lang={lang} />
+    <StatusDock lang={lang} />
+    <TranscriptCard lang={lang} />
+  </main>
+  <Footer lang={lang} />
+</Layout>
+
+<script>
+  import '@/scripts/app'
+</script>

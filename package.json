@@ -1,0 +1,34 @@
+{
+  "name": "chismesillo-app",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@huggingface/transformers": "4.2.0",
+    "@tailwindcss/vite": "4.3.3",
+    "astro": "7.1.4",
+    "daisyui": "5.7.4",
+    "mediabunny": "1.51.0",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

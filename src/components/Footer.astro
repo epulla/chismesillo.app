@@ -1,0 +1,31 @@
+---
+import { useTranslations } from '@/i18n/ui'
+import type { Lang } from '@/i18n/locales'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = useTranslations(lang)
+---
+
+<footer class="mt-auto border-t border-base-300 bg-base-100">
+  <div class="mx-auto grid w-full max-w-5xl gap-6 px-4 py-8 sm:grid-cols-[2fr_1fr]">
+    <div>
+      <h2 class="font-semibold">{t('footer.privacyTitle')}</h2>
+      <p class="mt-2 text-sm opacity-70">{t('footer.privacyBody')}</p>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <div>
+        <p class="text-sm font-semibold">{t('downloads.cacheTitle')}</p>
+        <p id="cache-size" class="text-xs opacity-70">{t('downloads.cacheEmpty')}</p>
+      </div>
+      <button id="clear-cache" type="button" class="btn btn-outline btn-sm w-fit" disabled>
+        {t('downloads.clear')}
+      </button>
+      <p class="text-xs opacity-50">{t('footer.builtWith')}</p>
+    </div>
+  </div>
+</footer>

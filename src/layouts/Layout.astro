@@ -1,0 +1,45 @@
+---
+import { clientStrings, useTranslations } from '@/i18n/ui'
+import { languages, type Lang } from '@/i18n/locales'
+import '@/styles/global.css'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = useTranslations(lang)
+const canonical = new URL(Astro.url.pathname, Astro.site)
+const strings = JSON.stringify(clientStrings(lang))
+---
+
+<!doctype html>
+<html lang={lang} data-theme="pastel">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{t('meta.title')}</title>
+    <meta name="description" content={t('meta.description')} />
+    <link rel="canonical" href={canonical} />
+    {
+      Object.keys(languages).map((code) => (
+        <link
+          rel="alternate"
+          hreflang={code}
+          href={new URL(code === 'en' ? '/' : `/${code}/`, Astro.site)}
+        />
+      ))
+    }
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={t('meta.title')} />
+    <meta property="og:description" content={t('meta.description')} />
+    <script
+      is:inline
+      set:html={`window.__I18N__ = ${strings}; window.__LANG__ = ${JSON.stringify(lang)};`}
+    />
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <slot />
+  </body>
+</html>

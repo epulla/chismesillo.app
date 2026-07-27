@@ -1,0 +1,56 @@
+---
+import { useTranslations } from '@/i18n/ui'
+import type { Lang } from '@/i18n/locales'
+
+interface Props {
+  lang: Lang
+}
+
+const { lang } = Astro.props
+const t = useTranslations(lang)
+const formats = [
+  { id: 'srt', label: t('export.srt') },
+  { id: 'vtt', label: t('export.vtt') },
+  { id: 'txt', label: t('export.txt') },
+  { id: 'json', label: t('export.json') },
+  { id: 'csv', label: t('export.csv') }
+]
+---
+
+<section id="transcript-card" class="card bg-base-100 hidden shadow-sm">
+  <div class="card-body gap-4">
+    <div class="flex flex-wrap items-center gap-3">
+      <h2 class="card-title text-lg">{t('result.title')}</h2>
+      <span id="segment-count" class="badge badge-ghost badge-sm"></span>
+      <span id="word-count" class="badge badge-ghost badge-sm"></span>
+      <span id="detected-language" class="badge badge-secondary badge-sm hidden"></span>
+      <button id="copy-button" type="button" class="btn btn-ghost btn-sm ml-auto">
+        {t('result.copy')}
+      </button>
+    </div>
+
+    <label class="input input-bordered flex items-center gap-2">
+      <span aria-hidden="true">🔎</span>
+      <input id="search-input" type="search" class="grow" placeholder={t('result.search')} />
+    </label>
+
+    <p id="transcript-empty" class="py-6 text-center text-sm opacity-60">{t('result.empty')}</p>
+    <ol id="segment-list" class="flex max-h-[32rem] flex-col gap-1 overflow-y-auto pr-1"></ol>
+    <p id="no-matches" class="hidden py-4 text-center text-sm opacity-60">
+      {t('result.noMatches')}
+    </p>
+
+    <div class="divider my-0"></div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-sm font-medium">{t('export.title')}</span>
+      {
+        formats.map((format) => (
+          <button type="button" class="btn btn-outline btn-sm" data-export={format.id}>
+            {format.label}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+</section>
