@@ -85,6 +85,14 @@
   /* Warm, low-opacity shadows. Neutral black shadows go grey and muddy on cream. */
   --shadow-card: 0 1px 2px rgb(43 35 32 / 0.04), 0 12px 28px -12px rgb(43 35 32 / 0.12);
   --shadow-lift: 0 2px 4px rgb(43 35 32 / 0.05), 0 20px 40px -16px rgb(43 35 32 / 0.18);
+
+  --ease-chisme: cubic-bezier(0.2, 0, 0, 1);
+  --ease-chisme-pop: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-chisme-ambient: cubic-bezier(0.37, 0, 0.63, 1);
+  --duration-chisme-fast: 120ms;
+  --duration-chisme: 320ms;
+  --duration-chisme-slow: 480ms;
+  --duration-chisme-ambient: 14s;
 }
 
 @layer base {
@@ -96,6 +104,9 @@
 
   body {
     @apply min-h-dvh bg-base-200 text-base-content font-sans antialiased;
+    /* daisyUI's :root background keeps body from propagating to the canvas, so
+       negative-z decorative layers need a body stacking context to stay visible. */
+    isolation: isolate;
   }
 
   h1,
@@ -131,6 +142,62 @@
     box-shadow: var(--shadow-card);
   }
 
+  .motion-blob {
+    opacity: var(--orb-opacity, 0.45);
+    will-change: transform;
+    animation:
+      chisme-orb-settle var(--duration-chisme-slow) var(--ease-chisme) var(--motion-delay, 0ms) both,
+      var(--drift) var(--duration-chisme-ambient) var(--ease-chisme-ambient)
+        calc(var(--duration-chisme-slow) + var(--motion-delay, 0ms)) infinite alternate;
+  }
+
+  .motion-blob:nth-child(2) {
+    animation-duration: var(--duration-chisme-slow), 18s;
+  }
+
+  .motion-blob:nth-child(3) {
+    animation-duration: var(--duration-chisme-slow), 22s;
+  }
+
+  /* Inference saturates the machine; decorative loops should not compete for frames. */
+  body[data-transcribing] .motion-blob {
+    animation-play-state: paused;
+  }
+
+  .motion-hero-copy > * {
+    animation: chisme-rise var(--duration-chisme-slow) var(--ease-chisme) both;
+  }
+
+  .motion-hero-copy > :nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .motion-hero-copy > :nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .motion-bullet {
+    animation: chisme-badge-pop var(--duration-chisme) var(--ease-chisme-pop) both;
+    animation-delay: var(--motion-delay, 0ms);
+  }
+
+  .motion-panel {
+    animation: chisme-rise var(--duration-chisme) var(--ease-chisme) both;
+  }
+
+  .motion-upload-icon {
+    transition:
+      transform var(--duration-chisme-fast) var(--ease-chisme-pop),
+      box-shadow var(--duration-chisme) var(--ease-chisme);
+  }
+
+  .dropzone:hover .motion-upload-icon,
+  .dropzone:focus-within .motion-upload-icon,
+  .dropzone.is-dragging .motion-upload-icon {
+    transform: translateY(-3px) rotate(-3deg) scale(1.04);
+    box-shadow: var(--shadow-lift);
+  }
+
   .dropzone {
     @apply rounded-box border-2 border-dashed border-base-300 transition-colors duration-200;
     background: var(--color-tint-rose);
@@ -142,10 +209,109 @@
     @apply border-primary;
   }
 
+  .easter-trigger {
+    @apply btn btn-ghost btn-xs min-h-6 w-6 rounded-full border border-transparent p-0;
+    color: var(--color-muted-content);
+    transition:
+      transform var(--duration-chisme-fast) var(--ease-chisme-pop),
+      color var(--duration-chisme-fast) var(--ease-chisme),
+      border-color var(--duration-chisme-fast) var(--ease-chisme);
+  }
+
+  .easter-trigger:hover,
+  .easter-trigger:focus-visible {
+    @apply border-base-300;
+    color: var(--color-primary);
+    transform: translateY(-1px) rotate(-6deg) scale(1.08);
+  }
+
+  .easter-heart {
+    animation: chisme-heart-pop 420ms var(--ease-chisme-pop) both;
+  }
+
+  .dedication-box {
+    @apply border border-base-300;
+    box-shadow: var(--shadow-lift);
+  }
+
   /* Monospaced timecodes keep the transcript list from jittering */
   .timecode {
     @apply font-mono text-xs tabular-nums;
     color: var(--color-muted-content);
+  }
+}
+
+@keyframes chisme-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes chisme-badge-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes chisme-orb-settle {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+
+  to {
+    opacity: var(--orb-opacity, 0.55);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes chisme-drift-a {
+  to {
+    opacity: calc(var(--orb-opacity, 0.45) * 1.3);
+    transform: translate3d(6vw, 4vh, 0) scale(1.12);
+  }
+}
+
+@keyframes chisme-drift-b {
+  to {
+    opacity: calc(var(--orb-opacity, 0.45) * 1.25);
+    transform: translate3d(-5vw, 5vh, 0) scale(1.15);
+  }
+}
+
+@keyframes chisme-drift-c {
+  to {
+    opacity: calc(var(--orb-opacity, 0.45) * 1.35);
+    transform: translate3d(5vw, -5vh, 0) scale(0.88);
+  }
+}
+
+@keyframes chisme-heart-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) rotate(-8deg);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.08) rotate(3deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
   }
 }
 
@@ -160,5 +326,22 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .motion-blob,
+  .motion-hero-copy > *,
+  .motion-bullet,
+  .motion-panel,
+  .easter-heart,
+  .dropzone:hover .motion-upload-icon,
+  .dropzone:focus-within .motion-upload-icon,
+  .dropzone.is-dragging .motion-upload-icon,
+  .easter-trigger:hover,
+  .easter-trigger:focus-visible {
+    transform: none !important;
+  }
+
+  .motion-blob {
+    animation: none !important;
   }
 }

@@ -62,7 +62,9 @@ const dom = {
   copyButton: el<HTMLButtonElement>(DOM_IDS.copyButton),
 
   cacheSize: el(DOM_IDS.cacheSize),
-  clearCache: el<HTMLButtonElement>(DOM_IDS.clearCache)
+  clearCache: el<HTMLButtonElement>(DOM_IDS.clearCache),
+  dedicationTrigger: el<HTMLButtonElement>(DOM_IDS.dedicationTrigger),
+  dedicationDialog: el<HTMLDialogElement>(DOM_IDS.dedicationDialog)
 }
 
 type State = {
@@ -146,6 +148,9 @@ function init() {
   })
 
   dom.clearCache.addEventListener('click', () => void handleClearCache())
+  dom.dedicationTrigger.addEventListener('click', () => {
+    dom.dedicationDialog.showModal()
+  })
 
   // Leaving mid-run throws away the work: there is no server-side copy to resume from.
   window.addEventListener('beforeunload', (event) => {
@@ -217,6 +222,7 @@ async function run() {
   state.startedAt = performance.now()
 
   dom.startButton.disabled = true
+  document.body.dataset.transcribing = '1'
   show(dom.cancelButton, true)
   show(dom.statusDock, true)
   show(dom.transcriptCard, true)
@@ -320,6 +326,7 @@ async function run() {
 
 function finish() {
   state.running = false
+  delete document.body.dataset.transcribing
   dom.startButton.disabled = false
   show(dom.cancelButton, false)
   show(dom.downloadRow, false)

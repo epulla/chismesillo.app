@@ -25,7 +25,33 @@ const t = useTranslations(lang)
       <button id="clear-cache" type="button" class="btn btn-outline btn-sm rounded-full" disabled>
         {t('downloads.clear')}
       </button>
-      <p class="text-muted mt-2 text-xs">{t('footer.builtWith')}</p>
+      <p class="text-muted mt-2 flex items-center gap-1.5 text-xs">
+        <span>{t('footer.builtWith')}</span>
+        <button
+          id="dedication-trigger"
+          type="button"
+          class="easter-trigger"
+          aria-label={t('footer.dedicationButton')}
+        >
+          <span aria-hidden="true">♡</span>
+        </button>
+      </p>
     </div>
   </div>
+
+  <dialog id="dedication-dialog" class="modal" aria-label={t('footer.dedicationTitle')}>
+    <div class="dedication-box modal-box text-center">
+      <p class="easter-heart mx-auto mb-3 text-3xl" aria-hidden="true">♥</p>
+      <h2 class="text-2xl font-semibold">{t('footer.dedicationTitle')}</h2>
+      <p class="mt-4 text-pretty text-base leading-relaxed">{t('footer.dedication')}</p>
+      <form method="dialog" class="modal-action justify-center">
+        <button type="submit" class="btn btn-primary btn-sm rounded-full px-6">
+          {t('footer.closeDedication')}
+        </button>
+      </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button type="submit">{t('footer.closeDedication')}</button>
+    </form>
+  </dialog>
 </footer>

@@ -10,7 +10,11 @@ const { lang } = Astro.props
 const t = useTranslations(lang)
 ---
 
-<section id="status-dock" class="panel hidden p-6 sm:p-8" aria-label={t('a11y.statusRegion')}>
+<section
+  id="status-dock"
+  class="motion-panel panel hidden p-6 sm:p-8"
+  aria-label={t('a11y.statusRegion')}
+>
   <div class="flex flex-wrap items-center gap-4">
     <span id="status-spinner" class="loading loading-spinner loading-md text-primary"></span>
     <div class="min-w-0 flex-1">

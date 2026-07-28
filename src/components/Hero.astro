@@ -16,15 +16,7 @@ const bullets = [
 ---
 
 <section class="relative overflow-hidden">
-  <!-- Two offset pastel washes give the cream page some depth without a hard edge. -->
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
-    <div class="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-tint-rose blur-3xl opacity-60">
-    </div>
-    <div class="absolute -top-16 right-0 h-72 w-72 rounded-full bg-tint-sky blur-3xl opacity-50">
-    </div>
-  </div>
-
-  <div class="mx-auto w-full max-w-3xl px-4 pt-16 pb-10 text-center sm:pt-24">
+  <div class="motion-hero-copy mx-auto w-full max-w-3xl px-4 pt-16 pb-10 text-center sm:pt-24">
     <p class="text-muted mb-5 text-sm font-semibold tracking-widest uppercase">
       {t('header.privacy')}
     </p>
@@ -36,12 +28,13 @@ const bullets = [
     </p>
     <ul class="mt-8 flex flex-wrap justify-center gap-2">
       {
-        bullets.map((bullet) => (
+        bullets.map((bullet, index) => (
           <li
             class:list={[
-              'rounded-full border border-base-300 px-4 py-1.5 text-sm font-medium',
+              'motion-bullet rounded-full border border-base-300 px-4 py-1.5 text-sm font-medium',
               bullet.tint
             ]}
+            style={`--motion-delay: ${180 + index * 55}ms`}
           >
             {bullet.label}
           </li>

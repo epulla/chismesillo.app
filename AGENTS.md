@@ -66,6 +66,9 @@ app.ts run loop  ──call('next')──>  audio.worker.ts  ──> decodeSessi
   green. Ids live in `domIds.ts` and `app.ts` only ever uses `DOM_IDS.x` — never a string
   literal. `domIds.test.ts` checks the manifest against the markup, so this now fails in
   `pnpm test` rather than in the browser.
+- **A `-z-10` decorative layer needs `isolation: isolate` on `body`.** daisyUI sets a
+  background on `:root`, so `body`'s background never propagates to the canvas and paints
+  over negative-z layers. `theme.test.ts` asserts the isolation rule.
 
 ## i18n
 
