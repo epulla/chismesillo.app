@@ -3,5 +3,10 @@ allowBuilds:
   onnxruntime-node: false
   protobufjs: true
   sharp: true
+# Same two advisories as osv-scanner.toml; see that file for the reasoning.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-f88m-g3jw-g9cj
+    - GHSA-xcpc-8h2w-3j85
 minimumReleaseAgeExclude:
   - astro@7.1.4

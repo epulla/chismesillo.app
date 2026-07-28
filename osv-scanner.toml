@@ -1,0 +1,10 @@
+# These advisories sit under @huggingface/transformers' Node backend. This app
+# loads transformers.js in the browser only; pnpm-workspace.yaml also disables the
+# onnxruntime-node build. Revisit these ignores when transformers.js is bumped.
+[[IgnoredVulns]]
+id = "GHSA-f88m-g3jw-g9cj"
+reason = "sharp: transformers.js Node image backend, never bundled for the browser"
+
+[[IgnoredVulns]]
+id = "GHSA-xcpc-8h2w-3j85"
+reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
