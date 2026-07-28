@@ -1,5 +1,6 @@
 dist/
 .astro/
 .claude/
+.agents/
 node_modules/
 pnpm-lock.yaml
