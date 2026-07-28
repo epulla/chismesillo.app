@@ -92,6 +92,11 @@ const state: State = {
 let audioClient: WorkerClient | null = null
 let asrClient: WorkerClient | null = null
 
+// Declared here, not beside gateWebGPUModels: init() runs during module evaluation and
+// updateModelHelp reads this, so a later `let` leaves it in the temporal dead zone and
+// takes every listener in init() down with it.
+let supportsWebGPU = false
+
 init()
 
 function init() {
@@ -515,8 +520,6 @@ function updateModelHelp() {
   const size = supportsWebGPU ? model.webgpuSize : model.wasmSize
   dom.modelHelp.textContent = `${t('config.modelHelp')} ${t('models.sizeApprox', { size })}`
 }
-
-let supportsWebGPU = false
 
 async function gateWebGPUModels() {
   const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu
