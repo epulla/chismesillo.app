@@ -10,33 +10,44 @@ const { lang } = Astro.props
 const t = useTranslations(lang)
 ---
 
-<section id="status-dock" class="card bg-base-100 hidden shadow-sm">
-  <div class="card-body gap-4">
-    <div class="flex flex-wrap items-center gap-3">
-      <span id="status-spinner" class="loading loading-spinner loading-sm text-primary"></span>
-      <div class="min-w-0 flex-1">
-        <p id="status-text" class="font-medium">{t('status.preparing')}</p>
-        <p id="status-detail" class="text-xs opacity-60"></p>
-      </div>
-      <span id="status-percent" class="font-mono text-sm tabular-nums opacity-70"></span>
+<section id="status-dock" class="panel hidden p-6 sm:p-8" aria-label={t('a11y.statusRegion')}>
+  <div class="flex flex-wrap items-center gap-4">
+    <span id="status-spinner" class="loading loading-spinner loading-md text-primary"></span>
+    <div class="min-w-0 flex-1">
+      <p id="status-text" class="font-semibold">{t('status.preparing')}</p>
+      <p id="status-detail" class="text-muted text-xs"></p>
     </div>
-
-    <progress id="status-progress" class="progress progress-primary w-full" value="0" max="100"
-    ></progress>
-
-    <p id="status-partial" class="hidden truncate text-xs italic opacity-50"></p>
-
-    <div id="download-row" class="hidden items-center gap-3 rounded-box bg-base-200 px-3 py-2">
-      <span class="text-sm">{t('downloads.whisper')}</span>
-      <progress
-        id="download-progress"
-        class="progress progress-secondary flex-1"
-        value="0"
-        max="100"></progress>
-      <span id="download-detail" class="font-mono text-xs tabular-nums opacity-70"></span>
-    </div>
-
-    <div id="warning-row" class="alert alert-warning hidden py-2 text-sm"></div>
-    <div id="error-row" class="alert alert-error hidden py-2 text-sm"></div>
+    <span id="status-percent" class="font-mono text-2xl tabular-nums"></span>
   </div>
+
+  <progress
+    id="status-progress"
+    class="progress progress-primary mt-4 w-full"
+    value="0"
+    max="100"
+    aria-label={t('a11y.transcriptionProgress')}></progress>
+
+  <p id="status-partial" class="text-muted mt-3 hidden truncate text-sm italic"></p>
+
+  <!-- Visible text updates on every repaint; this rate-limited region is what a
+       screen reader actually announces. -->
+  <p id="status-announcer" class="sr-only" role="status" aria-live="polite"></p>
+
+  <div
+    id="download-row"
+    class="mt-4 hidden items-center gap-3 rounded-box border border-base-300 bg-tint-sky px-4 py-3"
+  >
+    <span class="text-sm font-medium">{t('downloads.whisper')}</span>
+    <progress
+      id="download-progress"
+      class="progress progress-secondary flex-1"
+      value="0"
+      max="100"
+      aria-label={t('a11y.downloadProgress')}></progress>
+    <span id="download-detail" class="text-muted font-mono text-xs tabular-nums"></span>
+  </div>
+
+  <div id="warning-row" class="alert alert-soft alert-warning mt-4 hidden text-sm" role="status">
+  </div>
+  <div id="error-row" class="alert alert-soft alert-error mt-4 hidden text-sm" role="alert"></div>
 </section>

@@ -11,21 +11,21 @@ const t = useTranslations(lang)
 ---
 
 <footer class="mt-auto border-t border-base-300 bg-base-100">
-  <div class="mx-auto grid w-full max-w-5xl gap-6 px-4 py-8 sm:grid-cols-[2fr_1fr]">
+  <div class="mx-auto grid w-full max-w-5xl gap-8 px-4 py-12 sm:grid-cols-[2fr_1fr]">
     <div>
-      <h2 class="font-semibold">{t('footer.privacyTitle')}</h2>
-      <p class="mt-2 text-sm opacity-70">{t('footer.privacyBody')}</p>
+      <h2 class="text-lg font-semibold">{t('footer.privacyTitle')}</h2>
+      <p class="text-muted mt-3 max-w-prose text-sm leading-relaxed">{t('footer.privacyBody')}</p>
     </div>
 
-    <div class="flex flex-col gap-3">
+    <div class="flex flex-col items-start gap-3">
       <div>
         <p class="text-sm font-semibold">{t('downloads.cacheTitle')}</p>
-        <p id="cache-size" class="text-xs opacity-70">{t('downloads.cacheEmpty')}</p>
+        <p id="cache-size" class="text-muted text-xs">{t('downloads.cacheEmpty')}</p>
       </div>
-      <button id="clear-cache" type="button" class="btn btn-outline btn-sm w-fit" disabled>
+      <button id="clear-cache" type="button" class="btn btn-outline btn-sm rounded-full" disabled>
         {t('downloads.clear')}
       </button>
-      <p class="text-xs opacity-50">{t('footer.builtWith')}</p>
+      <p class="text-muted mt-2 text-xs">{t('footer.builtWith')}</p>
     </div>
   </div>
 </footer>
