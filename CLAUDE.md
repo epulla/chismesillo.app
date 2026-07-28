@@ -59,9 +59,11 @@ app.ts run loop  ──call('next')──>  audio.worker.ts  ──> decodeSessi
   `astro.config.mjs` (Astro renders HTML itself and bypasses `vite.server.headers`).
   Prod: `public/_headers`. Change one, change the other. Without them, CPU inference silently
   drops to single-threaded.
-- **`el()` throws on a missing id, at module load.** `app.ts`'s `dom` object resolves ~45 ids
+- **`el()` throws on a missing id, at module load.** `app.ts`'s `dom` object resolves ~46 ids
   eagerly, so renaming an id in any `.astro` file kills the whole page while the build stays
-  green. Grep `dist/index.html` _and_ `dist/es/index.html` after touching component markup.
+  green. Ids live in `domIds.ts` and `app.ts` only ever uses `DOM_IDS.x` — never a string
+  literal. `domIds.test.ts` checks the manifest against the markup, so this now fails in
+  `pnpm test` rather than in the browser.
 
 ## i18n
 
@@ -82,12 +84,37 @@ Tests are colocated (`src/scripts/*.test.ts`) and cover the silent-failure surfa
 boundaries, overlap de-duplication, timestamp repair, subtitle formatting, and a real decode
 of a synthesized WAV.
 
-- There is no `vitest.config.ts`, so the `@/` alias is **not** available in tests. Use
-  relative imports.
+- `vitest.config.ts` defaults every spec to the `node` environment. DOM specs opt in
+  per-file with a `// @vitest-environment happy-dom` docblock — don't switch the global
+  default, `decodeSession.test.ts` needs real Node.
+- The `@/` alias is available in tests, but existing specs use relative imports; match the
+  file you are editing.
 - Node has no WebCodecs, so decode tests can only use WAV/PCM. Compressed codecs are
   browser-only territory; don't add a test that would need them.
 - Nothing here can exercise real inference — no WebGPU, no model download. Changes to
   `transcriber.worker.ts` are typechecked, not verified. Say so rather than implying they run.
+
+## Design system
+
+One custom daisyUI theme, `chismesillo`, declared in `global.css` with `themes: false` so no
+builtin theme ships. **daisyUI 5 is installed and v4 class names are gone** — `form-control`,
+`label-text`, `label-text-alt`, `input-bordered` and `select-bordered` silently render as
+unstyled markup. Use `fieldset` / `fieldset-legend` / `fieldset-label`; borders are on by
+default.
+
+The palette is pastel, which constrains it: a pastel is too light to carry text or to act as
+a fill with its own boundary. So pastels are _fields_ (`--color-tint-*`, always paired with a
+border) and the daisyUI roles are deeper versions of the same hues. `theme.ts` is the source
+of truth; `theme.test.ts` re-derives every foreground/background pair the UI can produce and
+fails under WCAG AA, and separately asserts `global.css` still declares the same values.
+Change a colour in one place and the test names the other.
+
+Never use `opacity-*` for secondary text — that is what pushed the old design under 4.5:1.
+Use `.text-muted`.
+
+Fonts are self-hosted in `public/fonts` (latin subset, ~117 KB). This is not a preference:
+`README.md` and the footer both promise the only network request is the model weights, and
+`theme.test.ts` asserts every `url()` in the stylesheet is same-origin.
 
 ## Conventions
 
