@@ -1,0 +1,23 @@
+Fonts bundled with chismesillo
+==============================
+
+All three families are licensed under the SIL Open Font License, Version 1.1.
+Full licence text: https://openfontlicense.org/
+
+They are self-hosted rather than loaded from a CDN so that the only network
+request the app makes stays the Whisper model weights.
+
+Each file is the "latin" subset (U+0000-00FF), which covers every character the
+English and Spanish locales need.
+
+  fraunces.woff2           Fraunces (variable, opsz + wght)
+                           Copyright The Fraunces Project Authors
+                           https://github.com/undercasetype/Fraunces
+
+  nunito.woff2             Nunito (variable, wght)
+                           Copyright The Nunito Project Authors
+                           https://github.com/googlefonts/nunito
+
+  atkinson-mono-400.woff2  Atkinson Hyperlegible Mono
+                           Copyright Braille Institute of America, Inc.
+                           https://github.com/googlefonts/atkinson-hyperlegible

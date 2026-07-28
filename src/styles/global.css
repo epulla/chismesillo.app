@@ -1,31 +1,164 @@
 @import 'tailwindcss';
 
+/* themes: false — only the custom theme below ships, no light/dark builtins. */
 @plugin "daisyui" {
-  themes: pastel --default;
+  themes: false;
+}
+
+/* Values mirror TOKENS in src/scripts/theme.ts; theme.test.ts fails on drift. */
+@plugin "daisyui/theme" {
+  name: 'chismesillo';
+  default: true;
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #fbf6f1;
+  --color-base-300: #ebdfd4;
+  --color-base-content: #2b2320;
+  --color-primary: #a34e6b;
+  --color-primary-content: #ffffff;
+  --color-secondary: #4f7c6a;
+  --color-secondary-content: #ffffff;
+  --color-accent: #6b5ca5;
+  --color-accent-content: #ffffff;
+  --color-neutral: #2b2320;
+  --color-neutral-content: #fbf6f1;
+  --color-info: #2e6f91;
+  --color-info-content: #ffffff;
+  --color-success: #3f7a52;
+  --color-success-content: #ffffff;
+  --color-warning: #9a6212;
+  --color-warning-content: #ffffff;
+  --color-error: #b3372f;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 0.75rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1.25rem;
+  --size-selector: 0.28rem;
+  --size-field: 0.28rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* Self-hosted so the only network request stays the Whisper weights. Latin subset
+   only — it covers every character both locales need. See public/fonts/NOTICE.txt */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/fraunces.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/nunito.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Atkinson Hyperlegible Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/atkinson-mono-400.woff2') format('woff2');
+}
+
+@theme {
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
+
+  --color-muted-content: #6b5f58;
+  --color-focus-ring: #a34e6b;
+
+  --color-tint-rose: #fbe4ea;
+  --color-tint-mint: #dff3e9;
+  --color-tint-lilac: #e9e4f7;
+  --color-tint-peach: #fdebdc;
+  --color-tint-sky: #ddebf9;
+
+  /* Warm, low-opacity shadows. Neutral black shadows go grey and muddy on cream. */
+  --shadow-card: 0 1px 2px rgb(43 35 32 / 0.04), 0 12px 28px -12px rgb(43 35 32 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(43 35 32 / 0.05), 0 20px 40px -16px rgb(43 35 32 / 0.18);
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Focused elements must clear the sticky header (WCAG 2.4.11). */
+    scroll-padding-top: 6rem;
   }
 
   body {
-    @apply min-h-dvh bg-base-200 text-base-content antialiased;
+    @apply min-h-dvh bg-base-200 text-base-content font-sans antialiased;
+  }
+
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    font-variation-settings: 'SOFT' 20;
+    letter-spacing: -0.015em;
+  }
+
+  /* daisyUI ships focus styles per component; this catches everything else. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--color-tint-rose);
+    color: var(--color-base-content);
   }
 }
 
 @layer components {
-  /* Dropzone hover/drag affordance */
-  .dropzone {
-    @apply border-2 border-dashed border-base-300 rounded-box transition-colors duration-150;
+  /* Fixed grey rather than opacity: the old opacity-50/60 fell under 4.5:1. */
+  .text-muted {
+    color: var(--color-muted-content);
   }
 
+  /* Pastel washes sit ~1.1:1 against the page, so a tinted panel always pairs the
+     fill with a border — the border is what makes the boundary perceivable. */
+  .panel {
+    @apply rounded-box border border-base-300 bg-base-100;
+    box-shadow: var(--shadow-card);
+  }
+
+  .dropzone {
+    @apply rounded-box border-2 border-dashed border-base-300 transition-colors duration-200;
+    background: var(--color-tint-rose);
+  }
+
+  .dropzone:hover,
+  .dropzone:focus-within,
   .dropzone.is-dragging {
-    @apply border-primary bg-primary/10;
+    @apply border-primary;
   }
 
   /* Monospaced timecodes keep the transcript list from jittering */
   .timecode {
-    @apply font-mono text-xs tabular-nums opacity-70;
+    @apply font-mono text-xs tabular-nums;
+    color: var(--color-muted-content);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

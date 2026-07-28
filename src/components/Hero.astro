@@ -8,17 +8,45 @@ interface Props {
 
 const { lang } = Astro.props
 const t = useTranslations(lang)
-const bullets = [t('hero.bullet1'), t('hero.bullet2'), t('hero.bullet3')]
+const bullets = [
+  { label: t('hero.bullet1'), tint: 'bg-tint-rose' },
+  { label: t('hero.bullet2'), tint: 'bg-tint-mint' },
+  { label: t('hero.bullet3'), tint: 'bg-tint-lilac' }
+]
 ---
 
-<section class="mx-auto w-full max-w-5xl px-4 pt-10 pb-6 text-center">
-  <h1 class="text-3xl font-bold text-balance sm:text-4xl">{t('hero.title')}</h1>
-  <p class="mx-auto mt-3 max-w-2xl text-base opacity-75 text-pretty">{t('hero.subtitle')}</p>
-  <ul class="mt-5 flex flex-wrap justify-center gap-2">
-    {
-      bullets.map((bullet) => (
-        <li class="badge badge-outline badge-lg gap-1 whitespace-nowrap">{bullet}</li>
-      ))
-    }
-  </ul>
+<section class="relative overflow-hidden">
+  <!-- Two offset pastel washes give the cream page some depth without a hard edge. -->
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+    <div class="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-tint-rose blur-3xl opacity-60">
+    </div>
+    <div class="absolute -top-16 right-0 h-72 w-72 rounded-full bg-tint-sky blur-3xl opacity-50">
+    </div>
+  </div>
+
+  <div class="mx-auto w-full max-w-3xl px-4 pt-16 pb-10 text-center sm:pt-24">
+    <p class="text-muted mb-5 text-sm font-semibold tracking-widest uppercase">
+      {t('header.privacy')}
+    </p>
+    <h1 class="text-4xl leading-[1.05] font-semibold text-balance sm:text-6xl">
+      {t('hero.title')}
+    </h1>
+    <p class="text-muted mx-auto mt-6 max-w-xl text-lg text-pretty">
+      {t('hero.subtitle')}
+    </p>
+    <ul class="mt-8 flex flex-wrap justify-center gap-2">
+      {
+        bullets.map((bullet) => (
+          <li
+            class:list={[
+              'rounded-full border border-base-300 px-4 py-1.5 text-sm font-medium',
+              bullet.tint
+            ]}
+          >
+            {bullet.label}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
 </section>

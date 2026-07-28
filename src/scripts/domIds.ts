@@ -1,0 +1,59 @@
+/**
+ * Every id `app.ts` resolves eagerly at module load. `el()` throws on a miss, so a
+ * renamed id in an `.astro` file takes the whole page down while the build stays
+ * green — `domIds.test.ts` checks this list against the markup to catch that.
+ */
+export const DOM_IDS = {
+  dropzone: 'dropzone',
+  fileInput: 'file-input',
+  fileSummary: 'file-summary',
+  fileName: 'file-name',
+  fileMeta: 'file-meta',
+  fileChange: 'file-change',
+  player: 'player',
+  restoreBanner: 'restore-banner',
+  restoreText: 'restore-text',
+  restoreAccept: 'restore-accept',
+  restoreDismiss: 'restore-dismiss',
+
+  configCard: 'config-card',
+  modelSelect: 'model-select',
+  modelHelp: 'model-help',
+  languageSelect: 'language-select',
+  taskSelect: 'task-select',
+  wordTimestamps: 'word-timestamps',
+  windowMinutes: 'window-minutes',
+  windowValue: 'window-value',
+  forceCpu: 'force-cpu',
+  startButton: 'start-button',
+  cancelButton: 'cancel-button',
+
+  statusDock: 'status-dock',
+  statusSpinner: 'status-spinner',
+  statusText: 'status-text',
+  statusDetail: 'status-detail',
+  statusPercent: 'status-percent',
+  statusProgress: 'status-progress',
+  statusPartial: 'status-partial',
+  statusAnnouncer: 'status-announcer',
+  downloadRow: 'download-row',
+  downloadProgress: 'download-progress',
+  downloadDetail: 'download-detail',
+  warningRow: 'warning-row',
+  errorRow: 'error-row',
+
+  transcriptCard: 'transcript-card',
+  segmentList: 'segment-list',
+  transcriptEmpty: 'transcript-empty',
+  noMatches: 'no-matches',
+  segmentCount: 'segment-count',
+  wordCount: 'word-count',
+  detectedLanguage: 'detected-language',
+  searchInput: 'search-input',
+  copyButton: 'copy-button',
+
+  cacheSize: 'cache-size',
+  clearCache: 'clear-cache'
+} as const
+
+export type DomId = (typeof DOM_IDS)[keyof typeof DOM_IDS]

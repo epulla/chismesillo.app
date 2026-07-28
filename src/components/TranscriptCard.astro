@@ -17,40 +17,54 @@ const formats = [
 ]
 ---
 
-<section id="transcript-card" class="card bg-base-100 hidden shadow-sm">
-  <div class="card-body gap-4">
-    <div class="flex flex-wrap items-center gap-3">
-      <h2 class="card-title text-lg">{t('result.title')}</h2>
-      <span id="segment-count" class="badge badge-ghost badge-sm"></span>
-      <span id="word-count" class="badge badge-ghost badge-sm"></span>
-      <span id="detected-language" class="badge badge-secondary badge-sm hidden"></span>
-      <button id="copy-button" type="button" class="btn btn-ghost btn-sm ml-auto">
-        {t('result.copy')}
-      </button>
-    </div>
+<section id="transcript-card" class="panel hidden p-6 sm:p-8">
+  <div class="flex flex-wrap items-center gap-3">
+    <h2 class="text-2xl font-semibold">{t('result.title')}</h2>
+    <span id="segment-count" class="badge badge-ghost badge-sm rounded-full"></span>
+    <span id="word-count" class="badge badge-ghost badge-sm rounded-full"></span>
+    <span
+      id="detected-language"
+      class="badge badge-soft badge-secondary badge-sm hidden rounded-full"></span>
+    <button id="copy-button" type="button" class="btn btn-ghost btn-sm ml-auto rounded-full">
+      {t('result.copy')}
+    </button>
+  </div>
 
-    <label class="input input-bordered flex items-center gap-2">
-      <span aria-hidden="true">🔎</span>
-      <input id="search-input" type="search" class="grow" placeholder={t('result.search')} />
-    </label>
+  <label class="input mt-5 flex w-full items-center gap-2 rounded-full">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="text-muted"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="m20 20-3.5-3.5"></path>
+    </svg>
+    <span class="sr-only">{t('a11y.searchLabel')}</span>
+    <input id="search-input" type="search" class="grow" placeholder={t('result.search')} />
+  </label>
 
-    <p id="transcript-empty" class="py-6 text-center text-sm opacity-60">{t('result.empty')}</p>
-    <ol id="segment-list" class="flex max-h-[32rem] flex-col gap-1 overflow-y-auto pr-1"></ol>
-    <p id="no-matches" class="hidden py-4 text-center text-sm opacity-60">
-      {t('result.noMatches')}
-    </p>
+  <p id="transcript-empty" class="text-muted py-10 text-center text-sm">{t('result.empty')}</p>
+  <ol id="segment-list" class="mt-3 flex max-h-[32rem] flex-col gap-0.5 overflow-y-auto pr-1"></ol>
+  <p id="no-matches" class="text-muted hidden py-6 text-center text-sm">
+    {t('result.noMatches')}
+  </p>
 
-    <div class="divider my-0"></div>
-
-    <div class="flex flex-wrap items-center gap-2">
-      <span class="text-sm font-medium">{t('export.title')}</span>
-      {
-        formats.map((format) => (
-          <button type="button" class="btn btn-outline btn-sm" data-export={format.id}>
-            {format.label}
-          </button>
-        ))
-      }
-    </div>
+  <div class="mt-6 flex flex-wrap items-center gap-2 border-t border-base-300 pt-5">
+    <span class="text-sm font-semibold">{t('export.title')}</span>
+    {
+      formats.map((format) => (
+        <button type="button" class="btn btn-outline btn-sm rounded-full" data-export={format.id}>
+          {format.label}
+        </button>
+      ))
+    }
   </div>
 </section>
