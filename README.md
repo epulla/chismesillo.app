@@ -84,7 +84,7 @@ pnpm dev        # http://localhost:4321
 | `pnpm test`    | Vitest suite                   |
 | `pnpm format`  | Prettier                       |
 
-Requires Node ≥ 22.12.
+Requires Node ≥ 22.13.
 
 ### Cross-origin isolation
 

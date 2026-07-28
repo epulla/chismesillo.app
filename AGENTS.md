@@ -15,7 +15,7 @@ pnpm vitest run -t "quiet cut"                  # single test by name
 ```
 
 Verify with `pnpm format:check && pnpm check && pnpm test && pnpm build`; CI runs the same
-gate. Node >= 22.12, pnpm 11.
+gate. Node >= 22.13, pnpm 11.
 
 `pnpm dev` **returns immediately** — this Astro version daemonizes the dev server. Use
 `pnpm exec astro dev stop | status | logs`. A backgrounded `pnpm dev &` leaves a server
