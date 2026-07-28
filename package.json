@@ -20,7 +20,7 @@
   "dependencies": {
     "@huggingface/transformers": "4.2.0",
     "@tailwindcss/vite": "4.3.3",
-    "astro": "7.1.4",
+    "astro": "7.1.5",
     "daisyui": "5.7.4",
     "mediabunny": "1.51.0",
     "tailwindcss": "4.3.3"
