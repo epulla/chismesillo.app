@@ -12,100 +12,90 @@ const { lang } = Astro.props
 const t = useTranslations(lang)
 ---
 
-<section id="config-card" class="card bg-base-100 hidden shadow-sm">
-  <div class="card-body gap-4">
-    <h2 class="card-title text-lg">{t('config.title')}</h2>
+<section id="config-card" class="panel hidden p-6 sm:p-8">
+  <h2 class="text-2xl font-semibold">{t('config.title')}</h2>
 
-    <div class="grid gap-4 sm:grid-cols-2">
-      <label class="form-control w-full">
-        <div class="label"><span class="label-text font-medium">{t('config.model')}</span></div>
-        <select id="model-select" class="select select-bordered w-full">
-          {
-            MODELS.map((model) => (
-              <option value={model.id} data-requires-webgpu={String(model.requiresWebGPU)}>
-                {t(`models.${model.key}`)}
-              </option>
-            ))
-          }
-        </select>
-        <div class="label">
-          <span id="model-help" class="label-text-alt opacity-70">{t('config.modelHelp')}</span>
-        </div>
+  <div class="mt-6 grid gap-5 sm:grid-cols-2">
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend text-sm">{t('config.model')}</legend>
+      <select id="model-select" class="select w-full">
+        {
+          MODELS.map((model) => (
+            <option value={model.id} data-requires-webgpu={String(model.requiresWebGPU)}>
+              {t(`models.${model.key}`)}
+            </option>
+          ))
+        }
+      </select>
+      <p id="model-help" class="fieldset-label">{t('config.modelHelp')}</p>
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend text-sm">{t('config.language')}</legend>
+      <select id="language-select" class="select w-full">
+        <option value="">{t('config.languageAuto')}</option>
+        {
+          WHISPER_LANGUAGES.map((language) => (
+            <option value={language.code}>{language.name}</option>
+          ))
+        }
+      </select>
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend text-sm">{t('config.task')}</legend>
+      <select id="task-select" class="select w-full">
+        <option value="transcribe">{t('config.taskTranscribe')}</option>
+        <option value="translate">{t('config.taskTranslate')}</option>
+      </select>
+    </fieldset>
+
+    <fieldset class="fieldset justify-end">
+      <label class="fieldset-label text-base-content cursor-pointer gap-3 text-sm font-medium">
+        <input id="word-timestamps" type="checkbox" class="checkbox checkbox-primary" />
+        {t('config.wordTimestamps')}
       </label>
+      <p class="fieldset-label">{t('config.wordTimestampsHelp')}</p>
+    </fieldset>
+  </div>
 
-      <label class="form-control w-full">
-        <div class="label"><span class="label-text font-medium">{t('config.language')}</span></div>
-        <select id="language-select" class="select select-bordered w-full">
-          <option value="">{t('config.languageAuto')}</option>
-          {
-            WHISPER_LANGUAGES.map((language) => (
-              <option value={language.code}>{language.name}</option>
-            ))
-          }
-        </select>
-      </label>
+  <div class="collapse-arrow collapse mt-6 rounded-box border border-base-300 bg-base-200">
+    <input type="checkbox" aria-label={t('config.advanced')} />
+    <div class="collapse-title text-sm font-semibold">{t('config.advanced')}</div>
+    <div class="collapse-content grid gap-5 sm:grid-cols-2">
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend text-sm">
+          {t('config.windowMinutes')}
+          <span id="window-value" class="font-mono tabular-nums">10</span>
+        </legend>
+        <input
+          id="window-minutes"
+          type="range"
+          min="2"
+          max="20"
+          step="1"
+          value="10"
+          class="range range-primary range-sm"
+        />
+        <p class="fieldset-label">{t('config.windowHelp')}</p>
+      </fieldset>
 
-      <label class="form-control w-full">
-        <div class="label"><span class="label-text font-medium">{t('config.task')}</span></div>
-        <select id="task-select" class="select select-bordered w-full">
-          <option value="transcribe">{t('config.taskTranscribe')}</option>
-          <option value="translate">{t('config.taskTranslate')}</option>
-        </select>
-      </label>
-
-      <label class="form-control w-full justify-end">
-        <div class="label cursor-pointer justify-start gap-3">
-          <input id="word-timestamps" type="checkbox" class="checkbox checkbox-primary" />
-          <span class="label-text font-medium">{t('config.wordTimestamps')}</span>
-        </div>
-        <div class="label">
-          <span class="label-text-alt opacity-70">{t('config.wordTimestampsHelp')}</span>
-        </div>
-      </label>
-    </div>
-
-    <div class="collapse-arrow collapse border border-base-300">
-      <input type="checkbox" />
-      <div class="collapse-title text-sm font-medium">{t('config.advanced')}</div>
-      <div class="collapse-content grid gap-4 sm:grid-cols-2">
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">{t('config.windowMinutes')}</span>
-            <span id="window-value" class="label-text-alt">10</span>
-          </div>
-          <input
-            id="window-minutes"
-            type="range"
-            min="2"
-            max="20"
-            step="1"
-            value="10"
-            class="range range-primary range-sm"
-          />
-          <div class="label">
-            <span class="label-text-alt opacity-70">{t('config.windowHelp')}</span>
-          </div>
+      <fieldset class="fieldset">
+        <label class="fieldset-label text-base-content cursor-pointer gap-3 text-sm font-medium">
+          <input id="force-cpu" type="checkbox" class="checkbox checkbox-sm checkbox-primary" />
+          {t('config.forceCpu')}
         </label>
-
-        <label class="form-control w-full">
-          <div class="label cursor-pointer justify-start gap-3">
-            <input id="force-cpu" type="checkbox" class="checkbox checkbox-sm" />
-            <span class="label-text">{t('config.forceCpu')}</span>
-          </div>
-          <div class="label">
-            <span class="label-text-alt opacity-70">{t('config.forceCpuHelp')}</span>
-          </div>
-        </label>
-      </div>
+        <p class="fieldset-label">{t('config.forceCpuHelp')}</p>
+      </fieldset>
     </div>
+  </div>
 
-    <div class="card-actions justify-end">
-      <button id="cancel-button" type="button" class="btn btn-ghost hidden">
-        {t('config.cancel')}
-      </button>
-      <button id="start-button" type="button" class="btn btn-primary">
-        {t('config.start')}
-      </button>
-    </div>
+  <div class="mt-6 flex flex-wrap justify-end gap-2">
+    <button id="cancel-button" type="button" class="btn btn-ghost hidden rounded-full">
+      {t('config.cancel')}
+    </button>
+    <button id="start-button" type="button" class="btn btn-primary rounded-full px-7">
+      {t('config.start')}
+    </button>
   </div>
 </section>
