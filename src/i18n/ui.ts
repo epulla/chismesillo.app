@@ -10,6 +10,18 @@ export const ui = {
       description:
         'Transcribe long audio files with Whisper, entirely in your browser. No uploads, no backend, no API keys.'
     },
+    a11y: {
+      skipToContent: 'Skip to main content',
+      languageNav: 'Language',
+      mainContent: 'Main content',
+      statusRegion: 'Transcription status',
+      transcriptionProgress: 'Transcription progress',
+      downloadProgress: 'Model download progress',
+      searchLabel: 'Search in the transcript',
+      playSegment: 'Play from {time}: {text}',
+      fileIcon: 'Audio file',
+      openFilePicker: 'Choose an audio file from your device'
+    },
     header: {
       tagline: 'Whisper transcription that never leaves your device',
       privacy: '100% local',
@@ -132,6 +144,18 @@ export const ui = {
       title: 'chismesillo — transcripción de audio local',
       description:
         'Transcribe archivos de audio largos con Whisper, entero en tu navegador. Sin subidas, sin backend, sin claves de API.'
+    },
+    a11y: {
+      skipToContent: 'Saltar al contenido principal',
+      languageNav: 'Idioma',
+      mainContent: 'Contenido principal',
+      statusRegion: 'Estado de la transcripción',
+      transcriptionProgress: 'Progreso de la transcripción',
+      downloadProgress: 'Progreso de la descarga del modelo',
+      searchLabel: 'Buscar en la transcripción',
+      playSegment: 'Reproducir desde {time}: {text}',
+      fileIcon: 'Archivo de audio',
+      openFilePicker: 'Elige un archivo de audio de tu dispositivo'
     },
     header: {
       tagline: 'Transcripción con Whisper que nunca sale de tu dispositivo',
@@ -283,6 +307,7 @@ function lookup(tree: unknown, path: string): unknown {
 
 /** The sub-trees the client bundle needs at runtime. */
 const CLIENT_SECTIONS = [
+  'a11y',
   'config',
   'models',
   'status',

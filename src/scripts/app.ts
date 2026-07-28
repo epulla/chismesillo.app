@@ -1,4 +1,6 @@
 import { createTranslator, el, show } from './dom'
+import { DOM_IDS } from './domIds'
+import { createSegmentItem } from './segmentList'
 import { createAudioClient, createTranscriberClient, type WorkerClient } from './workerClient'
 import { DEFAULT_MODEL_ID, findModel, MODELS } from './models'
 import { languageName } from './languages'
@@ -11,55 +13,56 @@ import type { AudioWindow, Transcript, TranscriptSegment } from './types'
 const t = createTranslator()
 
 const dom = {
-  dropzone: el<HTMLLabelElement>('dropzone'),
-  fileInput: el<HTMLInputElement>('file-input'),
-  fileSummary: el('file-summary'),
-  fileName: el('file-name'),
-  fileMeta: el('file-meta'),
-  fileChange: el<HTMLButtonElement>('file-change'),
-  player: el<HTMLAudioElement>('player'),
-  restoreBanner: el('restore-banner'),
-  restoreText: el('restore-text'),
-  restoreAccept: el<HTMLButtonElement>('restore-accept'),
-  restoreDismiss: el<HTMLButtonElement>('restore-dismiss'),
+  dropzone: el<HTMLLabelElement>(DOM_IDS.dropzone),
+  fileInput: el<HTMLInputElement>(DOM_IDS.fileInput),
+  fileSummary: el(DOM_IDS.fileSummary),
+  fileName: el(DOM_IDS.fileName),
+  fileMeta: el(DOM_IDS.fileMeta),
+  fileChange: el<HTMLButtonElement>(DOM_IDS.fileChange),
+  player: el<HTMLAudioElement>(DOM_IDS.player),
+  restoreBanner: el(DOM_IDS.restoreBanner),
+  restoreText: el(DOM_IDS.restoreText),
+  restoreAccept: el<HTMLButtonElement>(DOM_IDS.restoreAccept),
+  restoreDismiss: el<HTMLButtonElement>(DOM_IDS.restoreDismiss),
 
-  configCard: el('config-card'),
-  modelSelect: el<HTMLSelectElement>('model-select'),
-  modelHelp: el('model-help'),
-  languageSelect: el<HTMLSelectElement>('language-select'),
-  taskSelect: el<HTMLSelectElement>('task-select'),
-  wordTimestamps: el<HTMLInputElement>('word-timestamps'),
-  windowMinutes: el<HTMLInputElement>('window-minutes'),
-  windowValue: el('window-value'),
-  forceCpu: el<HTMLInputElement>('force-cpu'),
-  startButton: el<HTMLButtonElement>('start-button'),
-  cancelButton: el<HTMLButtonElement>('cancel-button'),
+  configCard: el(DOM_IDS.configCard),
+  modelSelect: el<HTMLSelectElement>(DOM_IDS.modelSelect),
+  modelHelp: el(DOM_IDS.modelHelp),
+  languageSelect: el<HTMLSelectElement>(DOM_IDS.languageSelect),
+  taskSelect: el<HTMLSelectElement>(DOM_IDS.taskSelect),
+  wordTimestamps: el<HTMLInputElement>(DOM_IDS.wordTimestamps),
+  windowMinutes: el<HTMLInputElement>(DOM_IDS.windowMinutes),
+  windowValue: el(DOM_IDS.windowValue),
+  forceCpu: el<HTMLInputElement>(DOM_IDS.forceCpu),
+  startButton: el<HTMLButtonElement>(DOM_IDS.startButton),
+  cancelButton: el<HTMLButtonElement>(DOM_IDS.cancelButton),
 
-  statusDock: el('status-dock'),
-  statusSpinner: el('status-spinner'),
-  statusText: el('status-text'),
-  statusDetail: el('status-detail'),
-  statusPercent: el('status-percent'),
-  statusProgress: el<HTMLProgressElement>('status-progress'),
-  statusPartial: el('status-partial'),
-  downloadRow: el('download-row'),
-  downloadProgress: el<HTMLProgressElement>('download-progress'),
-  downloadDetail: el('download-detail'),
-  warningRow: el('warning-row'),
-  errorRow: el('error-row'),
+  statusDock: el(DOM_IDS.statusDock),
+  statusSpinner: el(DOM_IDS.statusSpinner),
+  statusText: el(DOM_IDS.statusText),
+  statusDetail: el(DOM_IDS.statusDetail),
+  statusPercent: el(DOM_IDS.statusPercent),
+  statusProgress: el<HTMLProgressElement>(DOM_IDS.statusProgress),
+  statusPartial: el(DOM_IDS.statusPartial),
+  statusAnnouncer: el(DOM_IDS.statusAnnouncer),
+  downloadRow: el(DOM_IDS.downloadRow),
+  downloadProgress: el<HTMLProgressElement>(DOM_IDS.downloadProgress),
+  downloadDetail: el(DOM_IDS.downloadDetail),
+  warningRow: el(DOM_IDS.warningRow),
+  errorRow: el(DOM_IDS.errorRow),
 
-  transcriptCard: el('transcript-card'),
-  segmentList: el<HTMLOListElement>('segment-list'),
-  transcriptEmpty: el('transcript-empty'),
-  noMatches: el('no-matches'),
-  segmentCount: el('segment-count'),
-  wordCount: el('word-count'),
-  detectedLanguage: el('detected-language'),
-  searchInput: el<HTMLInputElement>('search-input'),
-  copyButton: el<HTMLButtonElement>('copy-button'),
+  transcriptCard: el(DOM_IDS.transcriptCard),
+  segmentList: el<HTMLOListElement>(DOM_IDS.segmentList),
+  transcriptEmpty: el(DOM_IDS.transcriptEmpty),
+  noMatches: el(DOM_IDS.noMatches),
+  segmentCount: el(DOM_IDS.segmentCount),
+  wordCount: el(DOM_IDS.wordCount),
+  detectedLanguage: el(DOM_IDS.detectedLanguage),
+  searchInput: el<HTMLInputElement>(DOM_IDS.searchInput),
+  copyButton: el<HTMLButtonElement>(DOM_IDS.copyButton),
 
-  cacheSize: el('cache-size'),
-  clearCache: el<HTMLButtonElement>('clear-cache')
+  cacheSize: el(DOM_IDS.cacheSize),
+  clearCache: el<HTMLButtonElement>(DOM_IDS.clearCache)
 }
 
 type State = {
@@ -298,6 +301,7 @@ async function run() {
 
     if (state.running) {
       setStatus(t('status.done'), 100)
+      announce(t('status.done'), { force: true })
       dom.statusSpinner.classList.add('hidden')
       show(dom.statusPartial, false)
       persist(modelId, language, detectedLanguage, task, loaded.device, wordTimestamps)
@@ -325,6 +329,7 @@ function cancel() {
   if (!state.running) return
   state.running = false
   setStatus(t('status.canceled'), progressPercent())
+  announce(t('status.canceled'), { force: true })
   dom.statusSpinner.classList.add('hidden')
   finish()
 }
@@ -396,8 +401,24 @@ function progressPercent(): number {
 function setStatus(text: string, percent: number) {
   dom.statusText.textContent = text
   dom.statusProgress.value = percent
+  dom.statusProgress.setAttribute('aria-valuenow', String(Math.round(percent)))
   dom.statusPercent.textContent = `${Math.round(percent)}%`
   dom.statusDetail.textContent = elapsedDetail()
+  announce(`${text} ${Math.round(percent)}%`)
+}
+
+let lastAnnouncedAt = 0
+
+/**
+ * A multi-hour run repaints the status several times a second. Announcing every
+ * one makes a screen reader unusable, so the live region is rate limited; the
+ * visible text still updates immediately.
+ */
+function announce(message: string, { force = false } = {}) {
+  const now = Date.now()
+  if (!force && now - lastAnnouncedAt < 1000) return
+  lastAnnouncedAt = now
+  dom.statusAnnouncer.textContent = message
 }
 
 function elapsedDetail(): string {
@@ -432,6 +453,7 @@ function updateDownload(payload: unknown) {
 
   const percent = total ? Math.min(100, (loaded / total) * 100) : 0
   dom.downloadProgress.value = percent
+  dom.downloadProgress.setAttribute('aria-valuenow', String(Math.round(percent)))
   dom.downloadDetail.textContent = `${prettifyBytes(loaded)} / ${prettifyBytes(total)}`
 }
 
@@ -450,25 +472,15 @@ function renderSegments() {
 
   const fragment = document.createDocumentFragment()
   for (const segment of segments) {
-    const item = document.createElement('li')
-    item.className =
-      'flex gap-3 rounded-box px-2 py-1.5 transition-colors hover:bg-base-200 cursor-pointer'
-    item.title = t('result.playFrom')
-
-    const time = document.createElement('span')
-    time.className = 'timecode pt-0.5 shrink-0'
-    time.textContent = formatClock(segment.start)
-
-    const text = document.createElement('p')
-    text.className = 'text-sm leading-relaxed'
-    text.textContent = segment.text
-
-    item.append(time, text)
-    item.addEventListener('click', () => {
-      dom.player.currentTime = segment.start
-      void dom.player.play()
-    })
-    fragment.append(item)
+    fragment.append(
+      createSegmentItem(segment, {
+        label: (vars) => t('a11y.playSegment', vars),
+        onSeek: (startSec) => {
+          dom.player.currentTime = startSec
+          void dom.player.play()
+        }
+      })
+    )
   }
 
   dom.segmentList.replaceChildren(fragment)
