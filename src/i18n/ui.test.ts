@@ -41,6 +41,13 @@ describe('ui translations', () => {
       )
     }
   })
+
+  it('keeps the dedication exact in both locales', () => {
+    const dedication = 'Dedicado a mi amorsito Dome Soria de parte de Erick Pulla ❤️'
+
+    expect(useTranslations('en')('footer.dedication')).toBe(dedication)
+    expect(useTranslations('es')('footer.dedication')).toBe(dedication)
+  })
 })
 
 describe('clientStrings', () => {

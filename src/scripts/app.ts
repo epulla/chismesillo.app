@@ -62,7 +62,9 @@ const dom = {
   copyButton: el<HTMLButtonElement>(DOM_IDS.copyButton),
 
   cacheSize: el(DOM_IDS.cacheSize),
-  clearCache: el<HTMLButtonElement>(DOM_IDS.clearCache)
+  clearCache: el<HTMLButtonElement>(DOM_IDS.clearCache),
+  dedicationTrigger: el<HTMLButtonElement>(DOM_IDS.dedicationTrigger),
+  dedicationDialog: el<HTMLDialogElement>(DOM_IDS.dedicationDialog)
 }
 
 type State = {
@@ -146,6 +148,9 @@ function init() {
   })
 
   dom.clearCache.addEventListener('click', () => void handleClearCache())
+  dom.dedicationTrigger.addEventListener('click', () => {
+    dom.dedicationDialog.showModal()
+  })
 
   // Leaving mid-run throws away the work: there is no server-side copy to resume from.
   window.addEventListener('beforeunload', (event) => {

@@ -53,7 +53,9 @@ export const DOM_IDS = {
   copyButton: 'copy-button',
 
   cacheSize: 'cache-size',
-  clearCache: 'clear-cache'
+  clearCache: 'clear-cache',
+  dedicationTrigger: 'dedication-trigger',
+  dedicationDialog: 'dedication-dialog'
 } as const
 
 export type DomId = (typeof DOM_IDS)[keyof typeof DOM_IDS]

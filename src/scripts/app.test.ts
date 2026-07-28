@@ -32,6 +32,20 @@ function buildDom() {
       continue
     }
 
+    if (id === DOM_IDS.dedicationTrigger) {
+      const button = document.createElement('button')
+      button.id = id
+      document.body.append(button)
+      continue
+    }
+
+    if (id === DOM_IDS.dedicationDialog) {
+      const dialog = document.createElement('dialog')
+      dialog.id = id
+      document.body.append(dialog)
+      continue
+    }
+
     const node = document.createElement('div')
     node.id = id
     document.body.append(node)
@@ -62,5 +76,14 @@ describe('app module', () => {
     dropzone.dispatchEvent(event)
     expect(event.defaultPrevented).toBe(true)
     expect(dropzone.classList.contains('is-dragging')).toBe(true)
+  })
+
+  it('opens the dedication dialog from the footer easter egg', () => {
+    const trigger = document.getElementById(DOM_IDS.dedicationTrigger)!
+    const dialog = document.getElementById(DOM_IDS.dedicationDialog) as HTMLDialogElement
+
+    trigger.click()
+
+    expect(dialog.open).toBe(true)
   })
 })

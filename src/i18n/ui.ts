@@ -136,7 +136,11 @@ export const ui = {
       privacyTitle: 'What "local" means here',
       privacyBody:
         'Your audio is read straight from disk and processed in your browser. It is never uploaded. The only network requests are for the Whisper model weights, downloaded once from Hugging Face and then cached offline.',
-      builtWith: 'Built with Astro, Tailwind, daisyUI and transformers.js'
+      builtWith: 'Built with Astro, Tailwind, daisyUI and transformers.js',
+      dedicationButton: 'Open dedication note',
+      dedicationTitle: 'Nota escondida',
+      dedication: 'Dedicado a mi amorsito Dome Soria de parte de Erick Pulla ❤️',
+      closeDedication: 'Close'
     }
   },
   es: {
@@ -272,7 +276,11 @@ export const ui = {
       privacyTitle: 'Qué significa "local" aquí',
       privacyBody:
         'Tu audio se lee directamente del disco y se procesa en tu navegador. Nunca se sube a ningún sitio. Las únicas peticiones de red son las de los pesos del modelo Whisper, que se descargan una vez desde Hugging Face y quedan en caché.',
-      builtWith: 'Hecho con Astro, Tailwind, daisyUI y transformers.js'
+      builtWith: 'Hecho con Astro, Tailwind, daisyUI y transformers.js',
+      dedicationButton: 'Abrir nota escondida',
+      dedicationTitle: 'Nota escondida',
+      dedication: 'Dedicado a mi amorsito Dome Soria de parte de Erick Pulla ❤️',
+      closeDedication: 'Cerrar'
     }
   }
 } as const
