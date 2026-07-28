@@ -14,7 +14,8 @@ pnpm vitest run src/scripts/windowing.test.ts   # single file
 pnpm vitest run -t "quiet cut"                  # single test by name
 ```
 
-Verify with `pnpm format:check && pnpm check && pnpm test && pnpm build`. Node >= 22.12, pnpm 11.
+Verify with `pnpm format:check && pnpm check && pnpm test && pnpm build`; CI runs the same
+gate. Node >= 22.12, pnpm 11.
 
 `pnpm dev` **returns immediately** — this Astro version daemonizes the dev server. Use
 `pnpm exec astro dev stop | status | logs`. A backgrounded `pnpm dev &` leaves a server
@@ -55,10 +56,11 @@ app.ts run loop  ──call('next')──>  audio.worker.ts  ──> decodeSessi
   unknown, so a typo shows up as "progress never fires", not as an error.
 - **CPU needs fp32.** Quantized weights break on the WASM backend; only the WebGPU path gets
   q4. Encoded in `dtypeFor` (`models.ts:58`) — don't "optimize" the CPU download size.
-- **COOP/COEP live in two places.** Dev: the `crossOriginIsolationDev` integration in
-  `astro.config.mjs` (Astro renders HTML itself and bypasses `vite.server.headers`).
-  Prod: `public/_headers`. Change one, change the other. Without them, CPU inference silently
-  drops to single-threaded.
+- **COOP/COEP live in three places.** Dev: the `crossOriginIsolationDev` integration in
+  `astro.config.mjs` (Astro renders HTML itself and bypasses `vite.server.headers`). Prod:
+  `public/_headers` for Cloudflare/Netlify, `vercel.json` for Vercel, which ignores `_headers`.
+  `securityHeaders.test.ts` asserts they agree, so drift fails in tests instead of silently
+  dropping CPU inference to single-threaded.
 - **`el()` throws on a missing id, at module load.** `app.ts`'s `dom` object resolves ~46 ids
   eagerly, so renaming an id in any `.astro` file kills the whole page while the build stays
   green. Ids live in `domIds.ts` and `app.ts` only ever uses `DOM_IDS.x` — never a string

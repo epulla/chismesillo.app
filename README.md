@@ -94,9 +94,9 @@ The app sends `Cross-Origin-Opener-Policy: same-origin` and
 of `require-corp` so the Hugging Face CDN doesn't need to send CORP headers.
 
 In dev these come from an integration in `astro.config.mjs`; in production from
-`public/_headers`, which Cloudflare Pages, Netlify and similar hosts read directly. On
-other hosts, set those two headers yourself — without them inference still works, just
-single-threaded.
+`public/_headers` (Cloudflare Pages, Netlify and similar) and `vercel.json` (Vercel, which
+does not read `_headers`). On other hosts, set those two headers yourself — without them
+inference still works, just single-threaded.
 
 ## Browser support
 
