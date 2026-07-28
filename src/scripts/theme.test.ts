@@ -86,6 +86,10 @@ describe('global.css', () => {
     expect(css).toContain('prefers-reduced-motion: reduce')
   })
 
+  it('gives body a stacking context so the backdrop is visible', () => {
+    expect(block(css, '  body {')).toContain('isolation: isolate')
+  })
+
   it('disables every looping animation under reduced motion', () => {
     const reducedMotion = block(css, '@media (prefers-reduced-motion: reduce)')
 
