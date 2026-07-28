@@ -222,6 +222,7 @@ async function run() {
   state.startedAt = performance.now()
 
   dom.startButton.disabled = true
+  document.body.dataset.transcribing = '1'
   show(dom.cancelButton, true)
   show(dom.statusDock, true)
   show(dom.transcriptCard, true)
@@ -325,6 +326,7 @@ async function run() {
 
 function finish() {
   state.running = false
+  delete document.body.dataset.transcribing
   dom.startButton.disabled = false
   show(dom.cancelButton, false)
   show(dom.downloadRow, false)

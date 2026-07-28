@@ -1,0 +1,36 @@
+---
+const blobs = [
+  {
+    tint: 'bg-tint-rose',
+    position: '-top-40 -left-32 h-[26rem] w-[26rem]',
+    drift: 'a',
+    opacity: 0.55,
+    delay: '0ms'
+  },
+  {
+    tint: 'bg-tint-sky',
+    position: '-top-24 -right-40 h-[24rem] w-[24rem]',
+    drift: 'b',
+    opacity: 0.45,
+    delay: '120ms'
+  },
+  {
+    tint: 'bg-tint-lilac',
+    position: '-bottom-48 left-1/4 h-[30rem] w-[30rem]',
+    drift: 'c',
+    opacity: 0.4,
+    delay: '240ms'
+  }
+]
+---
+
+<div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+  {
+    blobs.map((blob) => (
+      <div
+        class:list={['motion-blob absolute rounded-full blur-3xl', blob.position, blob.tint]}
+        style={`--orb-opacity: ${blob.opacity}; --motion-delay: ${blob.delay}; --drift: chisme-drift-${blob.drift}`}
+      />
+    ))
+  }
+</div>

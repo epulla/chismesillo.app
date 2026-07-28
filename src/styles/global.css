@@ -88,9 +88,11 @@
 
   --ease-chisme: cubic-bezier(0.2, 0, 0, 1);
   --ease-chisme-pop: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-chisme-ambient: cubic-bezier(0.37, 0, 0.63, 1);
   --duration-chisme-fast: 120ms;
   --duration-chisme: 320ms;
   --duration-chisme-slow: 480ms;
+  --duration-chisme-ambient: 24s;
 }
 
 @layer base {
@@ -137,9 +139,26 @@
     box-shadow: var(--shadow-card);
   }
 
-  .motion-hero-orb {
-    animation: chisme-orb-settle var(--duration-chisme-slow) var(--ease-chisme) both;
-    animation-delay: var(--motion-delay, 0ms);
+  .motion-blob {
+    opacity: var(--orb-opacity, 0.45);
+    will-change: transform;
+    animation:
+      chisme-orb-settle var(--duration-chisme-slow) var(--ease-chisme) var(--motion-delay, 0ms) both,
+      var(--drift) var(--duration-chisme-ambient) var(--ease-chisme-ambient)
+        calc(var(--duration-chisme-slow) + var(--motion-delay, 0ms)) infinite alternate;
+  }
+
+  .motion-blob:nth-child(2) {
+    animation-duration: var(--duration-chisme-slow), 31s;
+  }
+
+  .motion-blob:nth-child(3) {
+    animation-duration: var(--duration-chisme-slow), 39s;
+  }
+
+  /* Inference saturates the machine; decorative loops should not compete for frames. */
+  body[data-transcribing] .motion-blob {
+    animation-play-state: paused;
   }
 
   .motion-hero-copy > * {
@@ -255,6 +274,24 @@
   }
 }
 
+@keyframes chisme-drift-a {
+  to {
+    transform: translate3d(3vw, 2vh, 0) scale(1.06);
+  }
+}
+
+@keyframes chisme-drift-b {
+  to {
+    transform: translate3d(-2.5vw, 3vh, 0) scale(1.08);
+  }
+}
+
+@keyframes chisme-drift-c {
+  to {
+    transform: translate3d(2vw, -3vh, 0) scale(0.94);
+  }
+}
+
 @keyframes chisme-heart-pop {
   0% {
     opacity: 0;
@@ -285,7 +322,7 @@
     transition-duration: 0.01ms !important;
   }
 
-  .motion-hero-orb,
+  .motion-blob,
   .motion-hero-copy > *,
   .motion-bullet,
   .motion-panel,
@@ -296,5 +333,9 @@
   .easter-trigger:hover,
   .easter-trigger:focus-visible {
     transform: none !important;
+  }
+
+  .motion-blob {
+    animation: none !important;
   }
 }
