@@ -53,8 +53,9 @@ The app tries WebGPU first with a quantized decoder, and CPU-capable models fall
 fp32 weights if the GPU fails either to load the model or to run a window. Quantized ONNX
 weights are unreliable on the CPU backend — missing dequantization scales on Firefox,
 unimplemented q4 kernels elsewhere — which is why the CPU path pays for fp32. Turbo is
-WebGPU-only and uses an fp16 encoder; it never falls back to a multi-gigabyte CPU download.
-There is a "force CPU" switch in the advanced settings for GPUs that misbehave.
+WebGPU-only and uses an fp16 encoder when supported, or q4 otherwise; it never falls back
+to a multi-gigabyte CPU download. There is a "force CPU" switch in the advanced settings
+for GPUs that misbehave.
 
 Weights are cached by the browser after the first download and can be deleted from the
 footer.

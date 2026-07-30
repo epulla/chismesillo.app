@@ -40,8 +40,9 @@ and must be rechecked after dependency upgrades.
    `min(4, ceil(hardwareConcurrency / 2))` at lines 11423-11426, but drops to one thread
    without `crossOriginIsolated`. Verify COOP/COEP in dev and every production host.
 
-8. **Guard fp16 and WebGPU fallback together.** Unsupported WebGPU fp16 throws at line
-   23176. This app must not catch that and reload a `requiresWebGPU` model on WASM; turbo
+8. **Guard fp16 and WebGPU fallback together.** Inspect `shader-f16` before loading turbo
+   and select its q4 encoder when unsupported; transformers.js otherwise throws at line
+   23176. Never catch that failure by reloading a `requiresWebGPU` model on WASM, which
    would start a multi-gigabyte CPU download.
 
 9. **State verification limits.** Repo tests have no WebGPU and download no models.

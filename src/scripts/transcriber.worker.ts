@@ -9,6 +9,10 @@
  * on the CPU backend (missing dequant scales on Firefox, unimplemented q4 kernels
  * elsewhere), hence fp32 down there.
  *
+ * Models flagged `requiresWebGPU` are exempt from that ladder: their fp32 weights
+ * are far too large to allocate, so the CPU rung does not exist and they fail with
+ * a translated error instead of starting a download that cannot finish.
+ *
  * Protocol (main -> worker):
  *   { id, type: 'ensure',      payload: { model, forceCpu } }
  *   { id, type: 'transcribe',  payload: { audio, language, task, wordTimestamps } }
@@ -21,7 +25,8 @@ import {
   WhisperTextStreamer,
   type AutomaticSpeechRecognitionPipeline
 } from '@huggingface/transformers'
-import { allowsCpuFallback, dtypeFor } from './models'
+import { isOutOfMemory, TranslatedError } from './errorKeys'
+import { dtypeFor, findModel, type Device, type DeviceCapabilities, type ModelKey } from './models'
 import { repairTimings, WHISPER_CHUNK_SEC, WHISPER_STRIDE_SEC } from './windowing'
 import type { TranscriptSegment } from './types'
 
@@ -29,8 +34,6 @@ import type { TranscriptSegment } from './types'
 // Local model files are never looked for: there is no server to serve them.
 env.allowLocalModels = false
 env.useBrowserCache = true
-
-type Device = 'webgpu' | 'wasm'
 
 type EnsurePayload = { model: string; forceCpu?: boolean }
 type TranscribePayload = {
@@ -46,6 +49,59 @@ const post = (message: unknown, transfer: Transferable[] = []) =>
 let recognizer: AutomaticSpeechRecognitionPipeline | null = null
 let loadedModel = ''
 let loadedDevice: Device = 'wasm'
+
+/**
+ * Weight downloads run concurrently inside transformers.js, and a rejection from a
+ * fetch the pipeline never awaits into our try/catch escapes as an unhandled
+ * rejection. Left alone that reads as a frozen progress bar with a console trace
+ * nobody sees, which is exactly how the turbo allocation failure used to present.
+ */
+self.addEventListener('unhandledrejection', (event) => {
+  event.preventDefault()
+  reportFatal(event.reason)
+})
+
+self.addEventListener('error', (event) => {
+  event.preventDefault()
+  reportFatal(event.error ?? event.message)
+})
+
+/**
+ * Set while a failed WebGPU pipeline is being abandoned for the CPU one. Weight
+ * fetches for the abandoned pipeline are still in flight and will reject after we
+ * have already recovered; reporting those would tear down a run that is fine.
+ */
+let recovering = false
+
+function reportFatal(reason: unknown) {
+  if (recovering) {
+    console.warn('[asr] ignored rejection from an abandoned pipeline:', reason)
+    return
+  }
+  console.error('[asr] fatal:', reason)
+  post({ type: 'event', name: 'fatal', payload: { message: describe(reason) } })
+}
+
+/** Runs a device fallback with unhandled rejections from the old pipeline muted. */
+async function whileRecovering<T>(run: () => Promise<T>): Promise<T> {
+  recovering = true
+  try {
+    return await run()
+  } finally {
+    // One turn of the event loop for the abandoned fetches to settle and be
+    // swallowed above before rejections start counting again.
+    setTimeout(() => {
+      recovering = false
+    }, 0)
+  }
+}
+
+/** Turns anything throwable into the string the UI knows how to translate. */
+function describe(error: unknown): string {
+  if (error instanceof TranslatedError) return error.message
+  if (isOutOfMemory(error)) return new TranslatedError('outOfMemory').message
+  return error instanceof Error ? error.message : String(error)
+}
 
 self.onmessage = async (event: MessageEvent) => {
   const { id, type, payload } = event.data ?? {}
@@ -78,7 +134,7 @@ self.onmessage = async (event: MessageEvent) => {
 
     throw new Error(`Unknown message type: ${type}`)
   } catch (error) {
-    post({ id, type: 'error', error: error instanceof Error ? error.message : String(error) })
+    post({ id, type: 'error', error: describe(error) })
   }
 }
 
@@ -88,33 +144,49 @@ async function ensureRecognizer({ model, forceCpu }: EnsurePayload): Promise<Dev
   await recognizer?.dispose()
   recognizer = null
 
-  const webgpuAvailable = !forceCpu && (await hasWebGPU())
+  const definition = findModel(model)
+  const modelKey = definition?.key ?? 'base'
+  const gpu = forceCpu ? { available: false, supportsF16: false } : await inspectWebGPU()
 
-  if (webgpuAvailable) {
+  if (definition?.requiresWebGPU && !gpu.available) {
+    throw new TranslatedError('needsWebgpu')
+  }
+
+  if (gpu.available) {
     try {
-      recognizer = await loadPipeline(model, 'webgpu')
+      recognizer = await loadPipeline(model, 'webgpu', modelKey, gpu)
       loadedModel = model
       loadedDevice = 'webgpu'
       return 'webgpu'
     } catch (error) {
-      if (!allowsCpuFallback(model)) throw error
+      // There is no CPU rung for these: fp32 is the only dtype the WASM backend
+      // runs reliably, and for a large model that is gigabytes we cannot allocate.
+      if (definition?.requiresWebGPU) throw error
       console.warn('[asr] WebGPU load failed, falling back to CPU:', error)
       post({ type: 'event', name: 'webgpu-fallback' })
+
+      recognizer = await whileRecovering(() => loadPipeline(model, 'wasm', modelKey))
+      loadedModel = model
+      loadedDevice = 'wasm'
+      return 'wasm'
     }
   }
 
-  if (!allowsCpuFallback(model)) throw new Error('This model requires WebGPU')
-
-  recognizer = await loadPipeline(model, 'wasm')
+  recognizer = await loadPipeline(model, 'wasm', modelKey)
   loadedModel = model
   loadedDevice = 'wasm'
   return 'wasm'
 }
 
-function loadPipeline(model: string, device: Device) {
+function loadPipeline(
+  model: string,
+  device: Device,
+  modelKey: ModelKey,
+  capabilities: DeviceCapabilities = {}
+) {
   return pipeline('automatic-speech-recognition', model, {
     device,
-    dtype: dtypeFor(device, model),
+    dtype: dtypeFor(device, modelKey, capabilities),
     progress_callback: (progress: unknown) =>
       post({ type: 'progress', key: 'asr', payload: progress })
   })
@@ -126,13 +198,20 @@ async function transcribe(payload: TranscribePayload) {
   } catch (error) {
     // A GPU that dies mid-run leaves the pipeline unusable. Rebuild on CPU and
     // give the window one more shot before surfacing the failure.
-    if (loadedDevice !== 'webgpu' || !allowsCpuFallback(loadedModel)) throw error
+    if (loadedDevice !== 'webgpu') throw error
+
+    const definition = findModel(loadedModel)
+    // Same reason as the load path: rebuilding a WebGPU-only model on CPU means
+    // downloading gigabytes of fp32 weights that will fail to allocate anyway.
+    if (definition?.requiresWebGPU) throw new TranslatedError('needsWebgpu')
 
     console.warn('[asr] WebGPU inference failed, retrying on CPU:', error)
     post({ type: 'event', name: 'webgpu-fallback' })
 
     await recognizer?.dispose()
-    recognizer = await loadPipeline(loadedModel, 'wasm')
+    recognizer = await whileRecovering(() =>
+      loadPipeline(loadedModel, 'wasm', definition?.key ?? 'base')
+    )
     loadedDevice = 'wasm'
 
     return runInference(payload)
@@ -293,12 +372,22 @@ async function detectLanguage(audio: Float32Array): Promise<string | null> {
   }
 }
 
-async function hasWebGPU(): Promise<boolean> {
-  const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu
-  if (!gpu) return false
+type Adapter = { features?: { has(name: string): boolean } }
+
+/**
+ * Reports both whether WebGPU exists and whether the adapter can run fp16 shaders.
+ * The second half matters: asking for fp16 weights on an adapter without
+ * `shader-f16` fails at session creation, and the only alternative that stays
+ * inside the allocation budget is a quantized encoder — never fp32.
+ */
+async function inspectWebGPU(): Promise<{ available: boolean; supportsF16: boolean }> {
+  const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<Adapter | null> } }).gpu
+  if (!gpu) return { available: false, supportsF16: false }
   try {
-    return (await gpu.requestAdapter()) !== null
+    const adapter = await gpu.requestAdapter()
+    if (!adapter) return { available: false, supportsF16: false }
+    return { available: true, supportsF16: adapter.features?.has('shader-f16') ?? false }
   } catch {
-    return false
+    return { available: false, supportsF16: false }
   }
 }

@@ -17,6 +17,27 @@ const post = (message: unknown, transfer: Transferable[] = []) =>
 
 let session: DecodeSession | null = null
 
+/**
+ * Decoding runs detached from any request — `DecodeSession.run()` drives the
+ * conversion in the background — so a failure there rejects a promise nobody is
+ * awaiting. Without this the run simply stops with the progress bar mid-way.
+ */
+self.addEventListener('unhandledrejection', (event) => {
+  event.preventDefault()
+  reportFatal(event.reason)
+})
+
+self.addEventListener('error', (event) => {
+  event.preventDefault()
+  reportFatal(event.error ?? event.message)
+})
+
+function reportFatal(reason: unknown) {
+  console.error('[audio] fatal:', reason)
+  const message = reason instanceof Error ? reason.message : String(reason)
+  post({ type: 'event', name: 'fatal', payload: { message } })
+}
+
 self.onmessage = async (event: MessageEvent) => {
   const { id, type, payload } = event.data ?? {}
   try {
