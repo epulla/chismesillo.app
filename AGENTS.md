@@ -52,16 +52,29 @@ app.ts run loop  ──call('next')──>  audio.worker.ts  ──> decodeSessi
   `process` hook returns `null`), so `composable: true` + `output.start()` + `output.cancel()`
   is the required sequence — a muxer asked to finalize a track with zero samples asserts.
 - **`chunk_callback` does not exist in transformers.js v4.** Use `WhisperTextStreamer`
-  (`transcriber.worker.ts:167`). Options passed to the pipeline are silently ignored if
+  (`transcriber.worker.ts`). Options passed to the pipeline are silently ignored if
   unknown, so a typo shows up as "progress never fires", not as an error.
 - **CPU needs fp32.** Quantized weights break on the WASM backend; only the WebGPU path gets
-  q4. Encoded in `dtypeFor` (`models.ts:58`) — don't "optimize" the CPU download size.
+  q4. Encoded in `dtypeFor` (`models.ts`) — don't "optimize" the CPU download size. The flip
+  side is that a large model has _no_ CPU path at all: fp32 turbo weights are 3.2 GB, so
+  `dtypeFor` throws `errors:needsWebgpu` rather than starting a download nobody can finish.
+- **`dtype` is per model, never a constant.** `fp32` for large-v3-turbo resolves to a 2.55 GB
+  `encoder_model.onnx_data` sidecar, which transformers.js reads into one contiguous
+  `Uint8Array` — a guaranteed `RangeError: Array buffer allocation failed` partway through the
+  download, not a slow one. A model whose dtype has an `.onnx_data` file is over the 2 GB
+  protobuf limit and cannot load in a browser; the `.onnx` stub next to it reads as 0.4 MB and
+  is actively misleading. `models.test.ts` asserts no device or adapter capability can resolve
+  an fp32 encoder for a WebGPU-only model. See the `transformers-js-memory` skill.
+- **A frozen progress bar is usually a swallowed error.** transformers.js fetches weight files
+  concurrently, and a rejection from one the pipeline never awaits into our `try/catch` escapes
+  as an unhandled rejection. Both workers install `unhandledrejection`/`error` handlers that
+  post a `fatal` event; without them a failed model load looks like a hang.
 - **COOP/COEP live in three places.** Dev: the `crossOriginIsolationDev` integration in
   `astro.config.mjs` (Astro renders HTML itself and bypasses `vite.server.headers`). Prod:
   `public/_headers` for Cloudflare/Netlify, `vercel.json` for Vercel, which ignores `_headers`.
   `securityHeaders.test.ts` asserts they agree, so drift fails in tests instead of silently
   dropping CPU inference to single-threaded.
-- **`el()` throws on a missing id, at module load.** `app.ts`'s `dom` object resolves ~46 ids
+- **`el()` throws on a missing id, at module load.** `app.ts`'s `dom` object resolves ~54 ids
   eagerly, so renaming an id in any `.astro` file kills the whole page while the build stays
   green. Ids live in `domIds.ts` and `app.ts` only ever uses `DOM_IDS.x` — never a string
   literal. `domIds.test.ts` checks the manifest against the markup, so this now fails in
