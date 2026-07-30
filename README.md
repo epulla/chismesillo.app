@@ -44,16 +44,18 @@ No UI framework: the pages are static Astro and the client logic is plain TypeSc
 
 | Option             | Model                                   | WebGPU download | CPU download    |
 | ------------------ | --------------------------------------- | --------------- | --------------- |
-| **Base (default)** | `Xenova/whisper-base`                   | ~80 MB          | ~300 MB         |
-| Tiny               | `Xenova/whisper-tiny`                   | ~40 MB          | ~150 MB         |
-| Small              | `Xenova/whisper-small`                  | ~250 MB         | ~1 GB           |
-| Turbo              | `onnx-community/whisper-large-v3-turbo` | ~800 MB         | — (WebGPU only) |
+| **Base (default)** | `Xenova/whisper-base`                   | ~200 MB         | ~280 MB         |
+| Tiny               | `Xenova/whisper-tiny`                   | ~120 MB         | ~150 MB         |
+| Small              | `Xenova/whisper-small`                  | ~560 MB         | ~930 MB         |
+| Turbo              | `onnx-community/whisper-large-v3-turbo` | ~1.5 GB         | — (WebGPU only) |
 
-The app tries WebGPU first with a quantized decoder, and falls back to CPU with fp32
-weights if the GPU fails either to load the model or to run a window. Quantized ONNX
+The app tries WebGPU first with a quantized decoder, and CPU-capable models fall back to
+fp32 weights if the GPU fails either to load the model or to run a window. Quantized ONNX
 weights are unreliable on the CPU backend — missing dequantization scales on Firefox,
-unimplemented q4 kernels elsewhere — which is why the CPU path pays for fp32. There is
-a "force CPU" switch in the advanced settings for GPUs that misbehave.
+unimplemented q4 kernels elsewhere — which is why the CPU path pays for fp32. Turbo is
+WebGPU-only and uses an fp16 encoder when supported, or q4 otherwise; it never falls back
+to a multi-gigabyte CPU download. There is a "force CPU" switch in the advanced settings
+for GPUs that misbehave.
 
 Weights are cached by the browser after the first download and can be deleted from the
 footer.

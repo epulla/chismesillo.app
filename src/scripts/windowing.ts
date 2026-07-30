@@ -2,6 +2,11 @@ import type { TranscriptSegment } from './types'
 
 export const SAMPLE_RATE = 16000
 
+export const WHISPER_CHUNK_SEC = 30
+
+/** Context discarded from each edge of an internal Whisper chunk. */
+export const WHISPER_STRIDE_SEC = 3
+
 /** Seconds of audio replayed at the start of the next window so words aren't cut. */
 export const OVERLAP_SEC = 2
 
@@ -149,4 +154,25 @@ export function repairTimings(
 export function countWindows(durationSec: number, windowSec: number): number {
   if (!Number.isFinite(durationSec) || durationSec <= 0) return 1
   return Math.max(1, Math.ceil(durationSec / windowSec))
+}
+
+/**
+ * Transformers.js advances by the chunk length minus both discarded margins.
+ * Reject a non-positive hop because the pipeline's chunk loop would never finish.
+ */
+export function whisperHopSec(chunkSec = WHISPER_CHUNK_SEC, strideSec = WHISPER_STRIDE_SEC) {
+  const hop = chunkSec - 2 * strideSec
+  if (hop <= 0) throw new Error('Whisper stride must be smaller than half the chunk length')
+  return hop
+}
+
+/** Number of internal Whisper passes needed for an audio duration. */
+export function countWhisperChunks(
+  durationSec: number,
+  chunkSec = WHISPER_CHUNK_SEC,
+  strideSec = WHISPER_STRIDE_SEC
+): number {
+  if (!Number.isFinite(durationSec) || durationSec <= 0) return 1
+  if (durationSec <= chunkSec) return 1
+  return 1 + Math.ceil((durationSec - chunkSec) / whisperHopSec(chunkSec, strideSec))
 }

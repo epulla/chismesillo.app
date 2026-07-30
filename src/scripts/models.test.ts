@@ -9,31 +9,43 @@ function encoderOf(dtype: ReturnType<typeof dtypeFor>): string {
   return typeof dtype === 'string' ? dtype : dtype.encoder_model
 }
 
+function sizeInMb(size: string): number {
+  const [value, unit] = size.split(' ')
+  return Number(value) * (unit === 'GB' ? 1024 : 1)
+}
+
 describe('MODELS', () => {
   it('has unique keys and ids', () => {
     expect(new Set(MODELS.map((model) => model.key)).size).toBe(MODELS.length)
     expect(new Set(MODELS.map((model) => model.id)).size).toBe(MODELS.length)
   })
 
-  // A WebGPU-only model has no CPU download to advertise, and updateModelHelp
-  // relies on that null to say so instead of printing a size nobody can use.
   it('declares a wasm size exactly for the models that can run on wasm', () => {
     for (const model of MODELS) {
       expect(model.wasmSize === null).toBe(model.requiresWebGPU)
+    }
+  })
+
+  it('declares parseable download sizes', () => {
+    for (const model of MODELS) {
+      expect(model.webgpuSize).toMatch(/^\d+(?:\.\d+)? (?:MB|GB)$/)
+      if (model.wasmSize) expect(model.wasmSize).toMatch(/^\d+(?:\.\d+)? (?:MB|GB)$/)
+    }
+  })
+
+  it('reports smaller WebGPU downloads for CPU-capable models', () => {
+    for (const model of MODELS) {
+      if (model.wasmSize) {
+        expect(sizeInMb(model.webgpuSize)).toBeLessThan(sizeInMb(model.wasmSize))
+      }
     }
   })
 })
 
 describe('dtypeFor', () => {
   /**
-   * The bug this guards: `fp32` for large-v3-turbo resolves to a 2.55 GB
-   * `encoder_model.onnx_data` sidecar, which transformers.js reads into one
-   * contiguous Uint8Array and the browser refuses to allocate. The download died
-   * partway through with `RangeError: Array buffer allocation failed`.
-   *
-   * Nothing in this repo can run inference, so this is the assertion that has to
-   * hold: no device, and no adapter capability, may resolve an fp32 encoder for a
-   * model too big to allocate one.
+   * Nothing in this repo can run inference, so this guards the allocation failure:
+   * no device or adapter capability may select turbo's 2.55 GB fp32 encoder.
    */
   it('never resolves an fp32 encoder for a WebGPU-only model', () => {
     for (const model of MODELS.filter((entry) => entry.requiresWebGPU)) {
@@ -43,7 +55,6 @@ describe('dtypeFor', () => {
           try {
             encoder = encoderOf(dtypeFor(device, model.key, capabilities))
           } catch {
-            // Refusing outright is the other acceptable answer.
             continue
           }
           expect(encoder).not.toBe('fp32')
@@ -59,8 +70,6 @@ describe('dtypeFor', () => {
     })
   })
 
-  // Without shader-f16 the choice is a quantized encoder or nothing. Stepping up
-  // to fp32 to "stay accurate" is what produced the allocation failure.
   it('steps down to a quantized encoder when the adapter lacks shader-f16', () => {
     expect(dtypeFor('webgpu', 'turbo', { supportsF16: false })).toEqual({
       encoder_model: 'q4',

@@ -24,15 +24,15 @@ export const MODELS: ModelDefinition[] = [
   {
     key: 'base',
     id: 'Xenova/whisper-base',
-    webgpuSize: '80 MB',
-    wasmSize: '300 MB',
+    webgpuSize: '200 MB',
+    wasmSize: '280 MB',
     requiresWebGPU: false,
     melBins: 80
   },
   {
     key: 'tiny',
     id: 'Xenova/whisper-tiny',
-    webgpuSize: '40 MB',
+    webgpuSize: '120 MB',
     wasmSize: '150 MB',
     requiresWebGPU: false,
     melBins: 80
@@ -40,17 +40,16 @@ export const MODELS: ModelDefinition[] = [
   {
     key: 'small',
     id: 'Xenova/whisper-small',
-    webgpuSize: '250 MB',
-    wasmSize: '1 GB',
+    webgpuSize: '560 MB',
+    wasmSize: '930 MB',
     requiresWebGPU: false,
     melBins: 80
   },
   {
     key: 'turbo',
     id: 'onnx-community/whisper-large-v3-turbo',
-    // fp16 encoder (1.27 GB) + q4 decoder (334 MB). Not the 800 MB this used to
-    // claim: that number assumed a quantized encoder we do not ask for.
-    webgpuSize: '1.6 GB',
+    // fp16 encoder (~1.2 GiB) + q4 decoder (~319 MiB). This is not whole-model q4.
+    webgpuSize: '1.5 GB',
     wasmSize: null,
     requiresWebGPU: true,
     melBins: 128

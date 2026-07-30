@@ -11,6 +11,7 @@ import { cachedModelBytes, clearModelCache, prettifyBytes } from './modelCache'
 import { deleteTranscript, fileKey, loadTranscript, saveTranscript } from './store'
 import { countWords, downloadTranscript, formatClock, type ExportFormat } from './exports'
 import { countWindows, dropOverlapDuplicates, mergeSegments, offsetSegments } from './windowing'
+import { progressPercent, progressStats } from './progress'
 import type { AudioWindow, Transcript, TranscriptSegment } from './types'
 
 const t = createTranslator()
@@ -341,6 +342,8 @@ async function run() {
     })
     device = loaded.device
     show(dom.downloadRow, false)
+    // Download and first-run shader compilation are not transcription time.
+    state.startedAt = performance.now()
 
     const totalWindows = countWindows(state.durationSec, windowSec)
     let index = 0
@@ -366,7 +369,10 @@ async function run() {
       nextWindow = requestWindow()
 
       if (!language && !detectedLanguage && index === 0) {
-        setStatus(t('status.detectingLanguage'), progressPercent())
+        setStatus(
+          t('status.detectingLanguage'),
+          progressPercent(state.transcribedSec, state.durationSec)
+        )
         const probe = window.pcm.slice(0, Math.min(window.pcm.length, 30 * 16000))
         const detection = await asrClient.call<{ language: string | null }>('detect', {
           audio: probe
@@ -377,7 +383,7 @@ async function run() {
 
       setStatus(
         t('status.transcribing', { done: index + 1, total: totalWindows }),
-        progressPercent()
+        progressPercent(state.transcribedSec, state.durationSec)
       )
 
       activeWindowStartSec = window.startSec
@@ -432,7 +438,7 @@ function finish() {
 function cancel() {
   if (!state.running) return
   state.running = false
-  setStatus(t('status.canceled'), progressPercent())
+  setStatus(t('status.canceled'), progressPercent(state.transcribedSec, state.durationSec))
   announce(t('status.canceled'), { force: true })
   dom.statusSpinner.classList.add('hidden')
   finish()
@@ -503,15 +509,11 @@ function handleAsrEvent(name: string, payload: unknown) {
     const reached = activeWindowStartSec + offset
     if (reached > state.transcribedSec) {
       state.transcribedSec = reached
-      dom.statusProgress.value = progressPercent()
-      dom.statusPercent.textContent = `${progressPercent()}%`
+      const percent = progressPercent(state.transcribedSec, state.durationSec)
+      dom.statusProgress.value = percent
+      dom.statusPercent.textContent = `${percent}%`
     }
   }
-}
-
-function progressPercent(): number {
-  if (!state.durationSec) return 5
-  return Math.min(99, Math.round((state.transcribedSec / state.durationSec) * 100))
 }
 
 function setStatus(text: string, percent: number) {
@@ -538,15 +540,15 @@ function announce(message: string, { force = false } = {}) {
 }
 
 function elapsedDetail(): string {
-  if (!state.startedAt || !state.transcribedSec) return ''
+  if (!state.startedAt) return ''
   const elapsedSec = (performance.now() - state.startedAt) / 1000
-  const factor = state.transcribedSec / elapsedSec
-  const remainingSec = (state.durationSec - state.transcribedSec) / Math.max(factor, 0.01)
+  const stats = progressStats(state.transcribedSec, state.durationSec, elapsedSec)
+  if (!stats) return ''
 
   const parts = [t('status.elapsed', { time: formatClock(elapsedSec) })]
-  if (factor > 0) parts.push(t('status.speed', { factor: factor.toFixed(1) }))
-  if (remainingSec > 1 && state.durationSec > state.transcribedSec) {
-    parts.push(t('status.remaining', { time: formatClock(remainingSec) }))
+  parts.push(t('status.speed', { factor: stats.factor.toFixed(1) }))
+  if (stats.remainingSec !== null) {
+    parts.push(t('status.remaining', { time: formatClock(stats.remainingSec) }))
   }
   return parts.join(' · ')
 }

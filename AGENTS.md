@@ -35,7 +35,7 @@ app.ts run loop  ──call('next')──>  audio.worker.ts  ──> decodeSessi
                  ──call('transcribe')──>  transcriber.worker.ts (transformers.js)
 ```
 
-- **One window ahead, never two.** `run()` in `app.ts:202` requests window N+1 before
+- **One window ahead, never two.** `run()` in `app.ts` requests window N+1 before
   awaiting transcription of N. `DecodeSession.publish` blocks decoding until the consumer
   pulls, which is what keeps memory flat on multi-hour files. Removing either half breaks
   the invariant that `decodeSession.test.ts` asserts.
@@ -52,10 +52,13 @@ app.ts run loop  ──call('next')──>  audio.worker.ts  ──> decodeSessi
   `process` hook returns `null`), so `composable: true` + `output.start()` + `output.cancel()`
   is the required sequence — a muxer asked to finalize a track with zero samples asserts.
 - **`chunk_callback` does not exist in transformers.js v4.** Use `WhisperTextStreamer`
-  (`transcriber.worker.ts`). Options passed to the pipeline are silently ignored if
-  unknown, so a typo shows up as "progress never fires", not as an error.
-- **CPU needs fp32.** Quantized weights break on the WASM backend; only the WebGPU path gets
-  q4. Encoded in `dtypeFor` (`models.ts`) — don't "optimize" the CPU download size. The flip
+  (`buildStreamer` in `transcriber.worker.ts`). Options passed to the pipeline are silently
+  ignored if unknown, so a typo shows up as "progress never fires", not as an error.
+- **WebGPU download size is not whole-model q4.** The Xenova models keep the encoder at
+  fp32 and quantize only the decoder. Turbo uses fp16 when the adapter supports it and q4
+  otherwise. Include external `.onnx_data` blobs when calculating sizes.
+- **CPU needs fp32.** q4 weights break on the WASM backend; only the WebGPU path gets q4.
+  Encoded in `dtypeFor` (`models.ts`) — don't "optimize" the CPU download size. The flip
   side is that a large model has _no_ CPU path at all: fp32 turbo weights are 3.2 GB, so
   `dtypeFor` throws `errors:needsWebgpu` rather than starting a download nobody can finish.
 - **`dtype` is per model, never a constant.** `fp32` for large-v3-turbo resolves to a 2.55 GB

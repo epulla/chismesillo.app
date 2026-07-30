@@ -4,10 +4,10 @@
  * Hosts the transformers.js ASR pipeline. Inference is heavy WASM/GPU work, so it
  * lives off the main thread and the UI keeps painting while a file transcribes.
  *
- * Device ladder: try WebGPU first, and if either loading or inference blows up,
- * reload on WASM/CPU with fp32 weights and retry the window once. Quantized ONNX
- * weights are unreliable on the CPU backend (missing dequant scales on Firefox,
- * unimplemented q4 kernels elsewhere), hence fp32 down there.
+ * Device ladder: try WebGPU first, and for CPU-capable models reload on WASM/CPU
+ * if either loading or inference blows up. Quantized ONNX weights are unreliable
+ * on the CPU backend (missing dequant scales on Firefox, unimplemented q4 kernels
+ * elsewhere), hence fp32 down there.
  *
  * Models flagged `requiresWebGPU` are exempt from that ladder: their fp32 weights
  * are far too large to allocate, so the CPU rung does not exist and they fail with
@@ -27,7 +27,7 @@ import {
 } from '@huggingface/transformers'
 import { isOutOfMemory, TranslatedError } from './errorKeys'
 import { dtypeFor, findModel, type Device, type DeviceCapabilities, type ModelKey } from './models'
-import { repairTimings } from './windowing'
+import { repairTimings, WHISPER_CHUNK_SEC, WHISPER_STRIDE_SEC } from './windowing'
 import type { TranscriptSegment } from './types'
 
 // Weights come from the Hugging Face CDN and are cached by the browser afterwards.
@@ -222,8 +222,8 @@ async function runInference({ audio, language, task, wordTimestamps }: Transcrib
   if (!recognizer) throw new Error('The speech model is not loaded')
 
   const output = await recognizer(audio, {
-    chunk_length_s: 30,
-    stride_length_s: 5,
+    chunk_length_s: WHISPER_CHUNK_SEC,
+    stride_length_s: WHISPER_STRIDE_SEC,
     return_timestamps: wordTimestamps ? 'word' : true,
     language: language ?? undefined,
     task,
