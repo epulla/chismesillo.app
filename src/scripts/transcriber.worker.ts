@@ -4,10 +4,10 @@
  * Hosts the transformers.js ASR pipeline. Inference is heavy WASM/GPU work, so it
  * lives off the main thread and the UI keeps painting while a file transcribes.
  *
- * Device ladder: try WebGPU first, and if either loading or inference blows up,
- * reload on WASM/CPU with fp32 weights and retry the window once. Quantized ONNX
- * weights are unreliable on the CPU backend (missing dequant scales on Firefox,
- * unimplemented q4 kernels elsewhere), hence fp32 down there.
+ * Device ladder: try WebGPU first, and for CPU-capable models reload on WASM/CPU
+ * if either loading or inference blows up. Quantized ONNX weights are unreliable
+ * on the CPU backend (missing dequant scales on Firefox, unimplemented q4 kernels
+ * elsewhere), hence fp32 down there.
  *
  * Protocol (main -> worker):
  *   { id, type: 'ensure',      payload: { model, forceCpu } }
@@ -21,8 +21,8 @@ import {
   WhisperTextStreamer,
   type AutomaticSpeechRecognitionPipeline
 } from '@huggingface/transformers'
-import { dtypeFor } from './models'
-import { repairTimings } from './windowing'
+import { allowsCpuFallback, dtypeFor } from './models'
+import { repairTimings, WHISPER_CHUNK_SEC, WHISPER_STRIDE_SEC } from './windowing'
 import type { TranscriptSegment } from './types'
 
 // Weights come from the Hugging Face CDN and are cached by the browser afterwards.
@@ -97,10 +97,13 @@ async function ensureRecognizer({ model, forceCpu }: EnsurePayload): Promise<Dev
       loadedDevice = 'webgpu'
       return 'webgpu'
     } catch (error) {
+      if (!allowsCpuFallback(model)) throw error
       console.warn('[asr] WebGPU load failed, falling back to CPU:', error)
       post({ type: 'event', name: 'webgpu-fallback' })
     }
   }
+
+  if (!allowsCpuFallback(model)) throw new Error('This model requires WebGPU')
 
   recognizer = await loadPipeline(model, 'wasm')
   loadedModel = model
@@ -111,7 +114,7 @@ async function ensureRecognizer({ model, forceCpu }: EnsurePayload): Promise<Dev
 function loadPipeline(model: string, device: Device) {
   return pipeline('automatic-speech-recognition', model, {
     device,
-    dtype: dtypeFor(device),
+    dtype: dtypeFor(device, model),
     progress_callback: (progress: unknown) =>
       post({ type: 'progress', key: 'asr', payload: progress })
   })
@@ -123,7 +126,7 @@ async function transcribe(payload: TranscribePayload) {
   } catch (error) {
     // A GPU that dies mid-run leaves the pipeline unusable. Rebuild on CPU and
     // give the window one more shot before surfacing the failure.
-    if (loadedDevice !== 'webgpu') throw error
+    if (loadedDevice !== 'webgpu' || !allowsCpuFallback(loadedModel)) throw error
 
     console.warn('[asr] WebGPU inference failed, retrying on CPU:', error)
     post({ type: 'event', name: 'webgpu-fallback' })
@@ -140,8 +143,8 @@ async function runInference({ audio, language, task, wordTimestamps }: Transcrib
   if (!recognizer) throw new Error('The speech model is not loaded')
 
   const output = await recognizer(audio, {
-    chunk_length_s: 30,
-    stride_length_s: 5,
+    chunk_length_s: WHISPER_CHUNK_SEC,
+    stride_length_s: WHISPER_STRIDE_SEC,
     return_timestamps: wordTimestamps ? 'word' : true,
     language: language ?? undefined,
     task,

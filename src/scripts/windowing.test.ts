@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
+  countWhisperChunks,
   countWindows,
   dropOverlapDuplicates,
   findQuietCut,
   mergeSegments,
   offsetSegments,
   repairTimings,
-  SAMPLE_RATE
+  SAMPLE_RATE,
+  whisperHopSec,
+  WHISPER_CHUNK_SEC,
+  WHISPER_STRIDE_SEC
 } from './windowing'
 import type { TranscriptSegment } from './types'
 
@@ -150,5 +154,54 @@ describe('countWindows', () => {
   it('returns one window for unknown durations', () => {
     expect(countWindows(0, 600)).toBe(1)
     expect(countWindows(Number.NaN, 600)).toBe(1)
+  })
+})
+
+function referenceChunkCount(durationSec: number, chunkSec: number, strideSec: number) {
+  const jump = chunkSec - 2 * strideSec
+  let count = 0
+  let offset = 0
+
+  while (true) {
+    count++
+    if (offset + chunkSec >= durationSec) return count
+    offset += jump
+  }
+}
+
+describe('countWhisperChunks', () => {
+  it('matches the transformers.js pipeline loop', () => {
+    for (const strideSec of [WHISPER_STRIDE_SEC, 5]) {
+      for (const durationSec of [1, 30, 31, 60, 120, 600, 3600]) {
+        expect(countWhisperChunks(durationSec, WHISPER_CHUNK_SEC, strideSec)).toBe(
+          referenceChunkCount(durationSec, WHISPER_CHUNK_SEC, strideSec)
+        )
+      }
+    }
+  })
+
+  it('uses one pass for at most one chunk', () => {
+    expect(countWhisperChunks(1)).toBe(1)
+    expect(countWhisperChunks(WHISPER_CHUNK_SEC)).toBe(1)
+  })
+
+  it('reduces passes for a ten-minute window', () => {
+    expect(countWhisperChunks(600, 30, 3)).toBe(25)
+    expect(countWhisperChunks(600, 30, 5)).toBe(30)
+  })
+
+  it('does not reduce passes for one minute', () => {
+    expect(countWhisperChunks(60, 30, 3)).toBe(3)
+    expect(countWhisperChunks(60, 30, 5)).toBe(3)
+  })
+
+  it('rejects a stride that cannot advance', () => {
+    expect(() => whisperHopSec(30, 15)).toThrow(/half the chunk length/)
+    expect(() => whisperHopSec(30, 16)).toThrow(/half the chunk length/)
+  })
+
+  it('returns one pass for an unknown duration', () => {
+    expect(countWhisperChunks(0)).toBe(1)
+    expect(countWhisperChunks(Number.NaN)).toBe(1)
   })
 })

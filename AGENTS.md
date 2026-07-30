@@ -35,7 +35,7 @@ app.ts run loop  ──call('next')──>  audio.worker.ts  ──> decodeSessi
                  ──call('transcribe')──>  transcriber.worker.ts (transformers.js)
 ```
 
-- **One window ahead, never two.** `run()` in `app.ts:202` requests window N+1 before
+- **One window ahead, never two.** `run()` in `app.ts` requests window N+1 before
   awaiting transcription of N. `DecodeSession.publish` blocks decoding until the consumer
   pulls, which is what keeps memory flat on multi-hour files. Removing either half breaks
   the invariant that `decodeSession.test.ts` asserts.
@@ -52,10 +52,17 @@ app.ts run loop  ──call('next')──>  audio.worker.ts  ──> decodeSessi
   `process` hook returns `null`), so `composable: true` + `output.start()` + `output.cancel()`
   is the required sequence — a muxer asked to finalize a track with zero samples asserts.
 - **`chunk_callback` does not exist in transformers.js v4.** Use `WhisperTextStreamer`
-  (`transcriber.worker.ts:167`). Options passed to the pipeline are silently ignored if
+  (`buildStreamer` in `transcriber.worker.ts`). Options passed to the pipeline are silently ignored if
   unknown, so a typo shows up as "progress never fires", not as an error.
-- **CPU needs fp32.** Quantized weights break on the WASM backend; only the WebGPU path gets
-  q4. Encoded in `dtypeFor` (`models.ts:58`) — don't "optimize" the CPU download size.
+- **CPU needs fp32.** q4 weights break on the WASM backend; only the WebGPU path gets a q4
+  decoder. Encoded in `dtypeFor` in `models.ts` — don't "optimize" the CPU download size
+  without testing real inference across browsers.
+- **WebGPU download size is not whole-model q4.** The Xenova models keep the encoder at
+  fp32 and quantize only the decoder. Turbo follows the upstream WebGPU demo with an fp16
+  encoder. Include external `.onnx_data` blobs when calculating sizes.
+- **WebGPU-only models must not fall back to CPU.** A failed turbo load would otherwise
+  start a roughly 3 GB fp32 download. Keep both load-time and inference-time fallback
+  guarded by `allowsCpuFallback`.
 - **COOP/COEP live in three places.** Dev: the `crossOriginIsolationDev` integration in
   `astro.config.mjs` (Astro renders HTML itself and bypasses `vite.server.headers`). Prod:
   `public/_headers` for Cloudflare/Netlify, `vercel.json` for Vercel, which ignores `_headers`.
