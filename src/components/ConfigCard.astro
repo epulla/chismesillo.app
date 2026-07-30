@@ -32,6 +32,8 @@ const t = useTranslations(lang)
 
     <fieldset class="fieldset">
       <legend class="fieldset-legend text-sm">{t('config.language')}</legend>
+
+      {/* Stays the value source and the no-JS fallback; the combobox hides it. */}
       <select id="language-select" class="select w-full">
         <option value="">{t('config.languageAuto')}</option>
         {
@@ -40,6 +42,34 @@ const t = useTranslations(lang)
           ))
         }
       </select>
+
+      <div id="language-combobox-wrap" class="relative hidden">
+        <label for="language-combobox" class="sr-only">{t('a11y.languageCombobox')}</label>
+        <input
+          id="language-combobox"
+          type="text"
+          class="input w-full"
+          role="combobox"
+          autocomplete="off"
+          spellcheck="false"
+          aria-expanded="false"
+          aria-controls="language-listbox"
+          aria-autocomplete="list"
+          placeholder={t('config.languageSearch')}
+        />
+        <ul
+          id="language-listbox"
+          role="listbox"
+          aria-label={t('config.language')}
+          class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
+          hidden
+        >
+        </ul>
+        <p id="language-no-matches" class="fieldset-label hidden">
+          {t('config.languageNoMatches')}
+        </p>
+        <p id="language-status" class="sr-only" role="status"></p>
+      </div>
     </fieldset>
 
     <fieldset class="fieldset">
@@ -66,7 +96,7 @@ const t = useTranslations(lang)
       <fieldset class="fieldset">
         <legend class="fieldset-legend text-sm">
           {t('config.windowMinutes')}
-          <span id="window-value" class="font-mono tabular-nums">10</span>
+          <span id="window-value" class="font-mono tabular-nums">5</span>
         </legend>
         <input
           id="window-minutes"
@@ -74,10 +104,11 @@ const t = useTranslations(lang)
           min="2"
           max="20"
           step="1"
-          value="10"
+          value="5"
           class="range range-primary range-sm"
         />
         <p class="fieldset-label">{t('config.windowHelp')}</p>
+        <p id="window-memory" class="fieldset-label"></p>
       </fieldset>
 
       <fieldset class="fieldset">

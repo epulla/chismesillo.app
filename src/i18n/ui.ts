@@ -20,7 +20,8 @@ export const ui = {
       searchLabel: 'Search in the transcript',
       playSegment: 'Play from {time}: {text}',
       fileIcon: 'Audio file',
-      openFilePicker: 'Choose an audio file from your device'
+      openFilePicker: 'Choose an audio file from your device',
+      languageCombobox: 'Search for the audio language'
     },
     header: {
       tagline: 'Whisper transcription that never leaves your device',
@@ -48,6 +49,9 @@ export const ui = {
       modelHelp: 'Bigger models are more accurate and slower to download and run.',
       language: 'Audio language',
       languageAuto: 'Detect automatically',
+      languageSearch: 'Type to search, e.g. "german"',
+      languageNoMatches: 'No language matches that',
+      languageResults: 'Results: {n}',
       task: 'Task',
       taskTranscribe: 'Transcribe (keep original language)',
       taskTranslate: 'Translate to English',
@@ -56,6 +60,7 @@ export const ui = {
       advanced: 'Advanced',
       windowMinutes: 'Chunk size (minutes)',
       windowHelp: 'Audio is decoded and transcribed in chunks so memory stays flat on long files.',
+      windowMemory: 'Around {size} of memory per chunk, on top of the model.',
       forceCpu: 'Force CPU (disable WebGPU)',
       forceCpuHelp: 'Use this if your GPU produces errors or garbled text.',
       start: 'Start transcription',
@@ -130,6 +135,10 @@ export const ui = {
       modelLoad: 'The speech model failed to load: {message}',
       transcribe: 'Transcription failed: {message}',
       webgpuFallback: 'WebGPU failed, falling back to CPU. This will be slower.',
+      needsWebgpu:
+        'This model only runs on WebGPU. Its CPU weights are several gigabytes, which your browser cannot load. Pick a smaller model, or use a browser with WebGPU enabled.',
+      outOfMemory:
+        'Your browser ran out of memory loading the model. Close other tabs and try again, or pick a smaller model.',
       generic: 'Unexpected error: {message}'
     },
     footer: {
@@ -159,7 +168,8 @@ export const ui = {
       searchLabel: 'Buscar en la transcripción',
       playSegment: 'Reproducir desde {time}: {text}',
       fileIcon: 'Archivo de audio',
-      openFilePicker: 'Elige un archivo de audio de tu dispositivo'
+      openFilePicker: 'Elige un archivo de audio de tu dispositivo',
+      languageCombobox: 'Busca el idioma del audio'
     },
     header: {
       tagline: 'Transcripción con Whisper que nunca sale de tu dispositivo',
@@ -187,6 +197,9 @@ export const ui = {
       modelHelp: 'Los modelos grandes son más precisos, pero tardan más en descargar y ejecutar.',
       language: 'Idioma del audio',
       languageAuto: 'Detectar automáticamente',
+      languageSearch: 'Escribe para buscar, p. ej. "alemán"',
+      languageNoMatches: 'Ningún idioma coincide',
+      languageResults: 'Resultados: {n}',
       task: 'Tarea',
       taskTranscribe: 'Transcribir (mantener el idioma original)',
       taskTranslate: 'Traducir al inglés',
@@ -196,6 +209,7 @@ export const ui = {
       windowMinutes: 'Tamaño de bloque (minutos)',
       windowHelp:
         'El audio se decodifica y transcribe por bloques para que la memoria no crezca con archivos largos.',
+      windowMemory: 'Unos {size} de memoria por bloque, además del modelo.',
       forceCpu: 'Forzar CPU (desactivar WebGPU)',
       forceCpuHelp: 'Úsalo si tu GPU da errores o texto corrupto.',
       start: 'Empezar transcripción',
@@ -270,6 +284,10 @@ export const ui = {
       modelLoad: 'El modelo de voz no se ha podido cargar: {message}',
       transcribe: 'La transcripción ha fallado: {message}',
       webgpuFallback: 'WebGPU ha fallado, seguimos con la CPU. Irá más lento.',
+      needsWebgpu:
+        'Este modelo solo funciona con WebGPU. Sus pesos para CPU ocupan varios gigabytes y tu navegador no puede cargarlos. Elige un modelo más pequeño o usa un navegador con WebGPU.',
+      outOfMemory:
+        'Tu navegador se ha quedado sin memoria al cargar el modelo. Cierra otras pestañas e inténtalo de nuevo, o elige un modelo más pequeño.',
       generic: 'Error inesperado: {message}'
     },
     footer: {

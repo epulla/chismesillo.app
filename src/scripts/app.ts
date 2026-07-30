@@ -1,9 +1,12 @@
 import { createTranslator, el, show } from './dom'
 import { DOM_IDS } from './domIds'
-import { createSegmentItem } from './segmentList'
+import { createSegmentItem, planSegmentRender } from './segmentList'
 import { createAudioClient, createTranscriberClient, type WorkerClient } from './workerClient'
 import { DEFAULT_MODEL_ID, findModel, MODELS } from './models'
 import { languageName } from './languages'
+import { enhanceLanguageSelect } from './languageCombobox'
+import { estimateWindowBytes } from './memoryEstimate'
+import { translatedKey } from './errorKeys'
 import { cachedModelBytes, clearModelCache, prettifyBytes } from './modelCache'
 import { deleteTranscript, fileKey, loadTranscript, saveTranscript } from './store'
 import { countWords, downloadTranscript, formatClock, type ExportFormat } from './exports'
@@ -11,6 +14,16 @@ import { countWindows, dropOverlapDuplicates, mergeSegments, offsetSegments } fr
 import type { AudioWindow, Transcript, TranscriptSegment } from './types'
 
 const t = createTranslator()
+
+const SEARCH_DEBOUNCE_MS = 150
+
+/**
+ * Floor between transcript writes. Saving is a full structured clone of a
+ * transcript that only grows, so doing it after every window means cloning
+ * hundreds of thousands of objects repeatedly on a long file. The run always
+ * writes once more when it stops, so nothing is lost by waiting.
+ */
+const PERSIST_INTERVAL_MS = 10_000
 
 const dom = {
   dropzone: el<HTMLLabelElement>(DOM_IDS.dropzone),
@@ -29,10 +42,16 @@ const dom = {
   modelSelect: el<HTMLSelectElement>(DOM_IDS.modelSelect),
   modelHelp: el(DOM_IDS.modelHelp),
   languageSelect: el<HTMLSelectElement>(DOM_IDS.languageSelect),
+  languageComboboxWrap: el(DOM_IDS.languageComboboxWrap),
+  languageCombobox: el<HTMLInputElement>(DOM_IDS.languageCombobox),
+  languageListbox: el(DOM_IDS.languageListbox),
+  languageNoMatches: el(DOM_IDS.languageNoMatches),
+  languageStatus: el(DOM_IDS.languageStatus),
   taskSelect: el<HTMLSelectElement>(DOM_IDS.taskSelect),
   wordTimestamps: el<HTMLInputElement>(DOM_IDS.wordTimestamps),
   windowMinutes: el<HTMLInputElement>(DOM_IDS.windowMinutes),
   windowValue: el(DOM_IDS.windowValue),
+  windowMemory: el(DOM_IDS.windowMemory),
   forceCpu: el<HTMLInputElement>(DOM_IDS.forceCpu),
   startButton: el<HTMLButtonElement>(DOM_IDS.startButton),
   cancelButton: el<HTMLButtonElement>(DOM_IDS.cancelButton),
@@ -107,6 +126,22 @@ function init() {
   void gateWebGPUModels()
   void refreshCacheInfo()
 
+  enhanceLanguageSelect(
+    {
+      select: dom.languageSelect,
+      wrap: dom.languageComboboxWrap,
+      input: dom.languageCombobox,
+      listbox: dom.languageListbox,
+      noMatches: dom.languageNoMatches,
+      status: dom.languageStatus
+    },
+    {
+      auto: t('config.languageAuto'),
+      noMatches: t('config.languageNoMatches'),
+      results: (count) => t('config.languageResults', { n: count })
+    }
+  )
+
   dom.fileInput.addEventListener('change', () => {
     const file = dom.fileInput.files?.[0]
     if (file) void selectFile(file)
@@ -131,19 +166,32 @@ function init() {
   })
 
   dom.modelSelect.addEventListener('change', updateModelHelp)
+  dom.forceCpu.addEventListener('change', applyDeviceGating)
   dom.windowMinutes.addEventListener('input', () => {
     dom.windowValue.textContent = dom.windowMinutes.value
+    updateMemoryEstimate()
   })
 
   dom.startButton.addEventListener('click', () => void run())
   dom.cancelButton.addEventListener('click', cancel)
-  dom.searchInput.addEventListener('input', renderSegments)
+
+  // Every keystroke filters and rebuilds the whole list. On a four-hour transcript
+  // that is thousands of rows per character typed, so wait for a pause first.
+  let searchTimer: ReturnType<typeof setTimeout> | undefined
+  dom.searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer)
+    searchTimer = setTimeout(() => renderSegments(), SEARCH_DEBOUNCE_MS)
+  })
+
   dom.copyButton.addEventListener('click', () => void copyTranscript())
 
   document.querySelectorAll<HTMLButtonElement>('[data-export]').forEach((button) => {
     button.addEventListener('click', () => {
       if (!state.transcript) return
-      downloadTranscript(state.transcript, button.dataset.export as ExportFormat)
+      // `state.transcript` is only rewritten on a throttled save, so mid-run it can
+      // hold an older segment array. Export what is on screen.
+      const transcript = { ...state.transcript, segments: state.segments }
+      downloadTranscript(transcript, button.dataset.export as ExportFormat)
     })
   })
 
@@ -168,6 +216,9 @@ async function selectFile(file: File) {
   state.segments = []
   state.transcript = null
   state.transcribedSec = 0
+  // A query left over from the previous file would filter the new transcript and,
+  // worse, force every render down the rebuild path for the whole run.
+  dom.searchInput.value = ''
 
   if (state.objectUrl) URL.revokeObjectURL(state.objectUrl)
   state.objectUrl = URL.createObjectURL(file)
@@ -212,9 +263,18 @@ function offerRestore(saved: Transcript) {
 
 /* --------------------------------------------------------------- running */
 
+/**
+ * Identifies the current run. `finish()` re-enables Start immediately, but the run
+ * that was cancelled is still suspended on an await that rejects a microtask later.
+ * If a new run started in between, the old one's `catch`/`finally` would report its
+ * own cancellation as an error and terminate the *new* run's workers.
+ */
+let runToken = 0
+
 async function run() {
   if (!state.file || state.running) return
 
+  const token = ++runToken
   state.running = true
   state.segments = []
   state.transcript = null
@@ -238,11 +298,32 @@ async function run() {
   const windowSec = Number(dom.windowMinutes.value) * 60
   const forceCpu = dom.forceCpu.checked
 
-  audioClient = createAudioClient()
+  // Per-file totals from a previous run would be added to this one's, so a second
+  // transcription reported a download roughly twice the real size.
+  downloadTotals.clear()
+
+  audioClient = createAudioClient({
+    onEvent: (name, payload) => handleAsrEvent(name, payload)
+  })
   asrClient = createTranscriberClient({
     onProgress: (_key, payload) => updateDownload(payload),
     onEvent: (name, payload) => handleAsrEvent(name, payload)
   })
+
+  // Hoisted so the `finally` can write a final transcript no matter how the run
+  // ended — done, failed or cancelled. Without that, throttling the writes below
+  // would quietly lose up to PERSIST_INTERVAL_MS of work on cancel.
+  let detectedLanguage: string | null = null
+  let device: 'webgpu' | 'wasm' = 'wasm'
+  let lastPersistAt = 0
+
+  const save = () => {
+    persist(modelId, language, detectedLanguage, task, device, wordTimestamps)
+    lastPersistAt = performance.now()
+  }
+  const saveThrottled = () => {
+    if (performance.now() - lastPersistAt >= PERSIST_INTERVAL_MS) save()
+  }
 
   try {
     setStatus(t('status.inspecting'), 2)
@@ -258,22 +339,31 @@ async function run() {
       model: modelId,
       forceCpu
     })
+    device = loaded.device
     show(dom.downloadRow, false)
 
     const totalWindows = countWindows(state.durationSec, windowSec)
-    let detectedLanguage: string | null = null
     let index = 0
 
     // Ask for window N+1 while window N is being transcribed: decoding and
     // inference overlap, but never by more than one window's worth of memory.
-    let nextWindow = audioClient.call<{ window?: AudioWindow; done?: boolean }>('next')
+    const requestWindow = () => {
+      const pending = audioClient!.call<{ window?: AudioWindow; done?: boolean }>('next')
+      // The loop can exit — last window, cancel, error — with this still in
+      // flight. terminate() rejects it, and a rejection nobody observed surfaces
+      // as an unhandled error in the console.
+      pending.catch(() => {})
+      return pending
+    }
+
+    let nextWindow = requestWindow()
 
     while (state.running) {
       const current = await nextWindow
       if (!current?.window) break
 
       const window = current.window
-      nextWindow = audioClient.call<{ window?: AudioWindow; done?: boolean }>('next')
+      nextWindow = requestWindow()
 
       if (!language && !detectedLanguage && index === 0) {
         setStatus(t('status.detectingLanguage'), progressPercent())
@@ -303,8 +393,8 @@ async function run() {
       state.segments = mergeSegments(state.segments, fresh)
       state.transcribedSec = window.endSec
 
-      renderSegments()
-      persist(modelId, language, detectedLanguage, task, loaded.device, wordTimestamps)
+      renderSegments({ incremental: true })
+      saveThrottled()
 
       index++
       if (window.isLast) break
@@ -315,12 +405,14 @@ async function run() {
       announce(t('status.done'), { force: true })
       dom.statusSpinner.classList.add('hidden')
       show(dom.statusPartial, false)
-      persist(modelId, language, detectedLanguage, task, loaded.device, wordTimestamps)
     }
   } catch (error) {
-    if (state.running) showError(error)
+    if (token === runToken && state.running) showError(error)
   } finally {
-    finish()
+    if (token === runToken) {
+      if (state.segments.length) save()
+      finish()
+    }
   }
 }
 
@@ -381,6 +473,18 @@ let activeWindowStartSec = 0
 function handleAsrEvent(name: string, payload: unknown) {
   if (name === 'webgpu-fallback') {
     showWarning(t('errors.webgpuFallback'))
+    return
+  }
+
+  // Something rejected outside any request we are awaiting — a weight download,
+  // usually. Nothing will ever resolve, so surface it and stop instead of leaving
+  // the progress bar spinning forever.
+  if (name === 'fatal') {
+    if (!state.running) return
+    const message = (payload as { message?: string })?.message ?? ''
+    state.running = false
+    showError(new Error(message))
+    finish()
     return
   }
 
@@ -471,17 +575,11 @@ function updateDownload(payload: unknown) {
 
 const downloadTotals = new Map<string, { loaded: number; total: number }>()
 
-function renderSegments() {
-  const query = dom.searchInput.value.trim().toLowerCase()
-  const segments = query
-    ? state.segments.filter((segment) => segment.text.toLowerCase().includes(query))
-    : state.segments
+/** The query the segment list currently reflects, and how many rows it holds. */
+let renderedQuery: string | null = null
+let renderedCount = 0
 
-  dom.segmentCount.textContent = t('result.segments', { n: state.segments.length })
-  dom.wordCount.textContent = t('result.words', { n: countWords(state.segments) })
-  show(dom.transcriptEmpty, state.segments.length === 0)
-  show(dom.noMatches, state.segments.length > 0 && segments.length === 0)
-
+function buildSegmentRows(segments: TranscriptSegment[]): DocumentFragment {
   const fragment = document.createDocumentFragment()
   for (const segment of segments) {
     fragment.append(
@@ -494,8 +592,51 @@ function renderSegments() {
       })
     )
   }
+  return fragment
+}
 
-  dom.segmentList.replaceChildren(fragment)
+/**
+ * `incremental` is set by the transcription loop, which only ever adds to the end
+ * of the transcript. planSegmentRender decides whether that is actually safe.
+ */
+function renderSegments({ incremental = false } = {}) {
+  const query = dom.searchInput.value.trim().toLowerCase()
+  const segments = query
+    ? state.segments.filter((segment) => segment.text.toLowerCase().includes(query))
+    : state.segments
+
+  dom.segmentCount.textContent = t('result.segments', { n: state.segments.length })
+  dom.wordCount.textContent = t('result.words', { n: countWords(state.segments) })
+  show(dom.transcriptEmpty, state.segments.length === 0)
+  show(dom.noMatches, state.segments.length > 0 && segments.length === 0)
+
+  const plan = planSegmentRender({
+    incremental,
+    query,
+    renderedQuery,
+    renderedCount,
+    total: state.segments.length
+  })
+
+  if (plan.mode === 'append') {
+    // Only stay pinned to the newest line if the reader was already there;
+    // yanking the scroll position out from under someone reading is worse than
+    // making them scroll.
+    const wasAtBottom = isScrolledToBottom(dom.segmentList)
+    dom.segmentList.append(buildSegmentRows(state.segments.slice(plan.from)))
+    renderedCount = state.segments.length
+    if (wasAtBottom) dom.segmentList.scrollTop = dom.segmentList.scrollHeight
+    return
+  }
+
+  dom.segmentList.replaceChildren(buildSegmentRows(segments))
+  renderedQuery = query
+  renderedCount = query ? 0 : segments.length
+}
+
+function isScrolledToBottom(node: HTMLElement): boolean {
+  const slack = 32
+  return node.scrollHeight - node.scrollTop - node.clientHeight <= slack
 }
 
 function setDetectedLanguage(code: string | null) {
@@ -521,25 +662,70 @@ async function copyTranscript() {
   }
 }
 
+/** WebGPU exists *and* the user has not overridden it. */
+function gpuUsable(): boolean {
+  return supportsWebGPU && !dom.forceCpu.checked
+}
+
 function updateModelHelp() {
   const model = findModel(dom.modelSelect.value)
   if (!model) return
-  const size = supportsWebGPU ? model.webgpuSize : model.wasmSize
-  dom.modelHelp.textContent = `${t('config.modelHelp')} ${t('models.sizeApprox', { size })}`
+
+  const size = gpuUsable() ? model.webgpuSize : model.wasmSize
+  // A WebGPU-only model has no CPU size to quote: its fp32 weights are far past
+  // what a tab can allocate, so say it needs a GPU rather than invent a number.
+  dom.modelHelp.textContent = size
+    ? `${t('config.modelHelp')} ${t('models.sizeApprox', { size })}`
+    : `${t('config.modelHelp')} ${t('models.needsWebgpu')}`
+
+  updateMemoryEstimate()
+}
+
+/**
+ * Prices the chunk-size slider. The cost of turning it up is real — a 20 minute
+ * window holds hundreds of megabytes of PCM and mel features — and it is otherwise
+ * invisible until the tab dies.
+ */
+function updateMemoryEstimate() {
+  const model = findModel(dom.modelSelect.value)
+  const windowSec = Number(dom.windowMinutes.value) * 60
+  if (!model || !Number.isFinite(windowSec)) return
+
+  const { total } = estimateWindowBytes(windowSec, model.melBins)
+  dom.windowMemory.textContent = t('config.windowMemory', { size: prettifyBytes(total) })
 }
 
 async function gateWebGPUModels() {
   const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu
   supportsWebGPU = Boolean(gpu && (await gpu.requestAdapter().catch(() => null)))
+  applyDeviceGating()
+}
 
-  if (!supportsWebGPU) {
-    for (const model of MODELS.filter((entry) => entry.requiresWebGPU)) {
-      const option = dom.modelSelect.querySelector<HTMLOptionElement>(`option[value="${model.id}"]`)
-      if (!option) continue
-      option.disabled = true
-      option.textContent = `${option.textContent} — ${t('models.needsWebgpu')}`
-    }
+/**
+ * Disables the models that cannot run on the device we are actually going to use.
+ * "Force CPU" counts: with it checked, a WebGPU-only model would otherwise stay
+ * selectable on a machine that has a GPU and only fail after Start.
+ */
+function applyDeviceGating() {
+  const usable = gpuUsable()
+
+  for (const model of MODELS) {
+    const option = dom.modelSelect.querySelector<HTMLOptionElement>(`option[value="${model.id}"]`)
+    if (!option) continue
+
+    const blocked = model.requiresWebGPU && !usable
+    option.disabled = blocked
+    // Rebuilt from the catalogue rather than appended to: toggling Force CPU
+    // twice would otherwise stack the suffix on the label.
+    const label = t(`models.${model.key}`)
+    option.textContent = blocked ? `${label} — ${t('models.needsWebgpu')}` : label
   }
+
+  // Leaving a disabled option selected would start a run that cannot work.
+  if (dom.modelSelect.selectedOptions[0]?.disabled) {
+    dom.modelSelect.value = DEFAULT_MODEL_ID
+  }
+
   updateModelHelp()
 }
 
@@ -557,8 +743,8 @@ function showWarning(message: string) {
 
 function showError(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error)
-  const decodeKey = raw.startsWith('decode:') ? raw.slice('decode:'.length) : null
-  const message = decodeKey ? t(`errors.${decodeKey}`) : t('errors.generic', { message: raw })
+  const key = translatedKey(raw)
+  const message = key ? t(`errors.${key}`) : t('errors.generic', { message: raw })
 
   dom.errorRow.textContent = message
   show(dom.errorRow, true)

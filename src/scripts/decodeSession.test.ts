@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DecodeSession } from './decodeSession'
+import { copyTruncate, DecodeSession, transferTruncate } from './decodeSession'
 import { SAMPLE_RATE } from './windowing'
 import type { AudioWindow } from './types'
 
@@ -129,5 +129,78 @@ describe('DecodeSession', () => {
     })
     await expect(session.open()).rejects.toThrow(/decode:unreadable|decode:noAudioTrack/)
     session.dispose()
+  })
+
+  /**
+   * The window handed over used to be a second full copy of the pending buffer,
+   * which doubled peak memory for as long as the handover took — ~77 MB extra at
+   * the slider's maximum. Truncating in place removes the copy but detaches the
+   * original, so the overlap tail has to be read out first. Getting that order
+   * wrong throws on the *next* window, not this one, so both strategies are driven
+   * here and compared.
+   */
+  it('produces identical windows however the head is truncated', async () => {
+    const transferSession = new DecodeSession({
+      file: makeWav(90),
+      windowSec: 20,
+      truncate: transferTruncate
+    })
+    await transferSession.open()
+    const transferred = await drain(transferSession)
+
+    const copySession = new DecodeSession({
+      file: makeWav(90),
+      windowSec: 20,
+      truncate: copyTruncate
+    })
+    await copySession.open()
+    const copied = await drain(copySession)
+
+    expect(transferred.length).toBe(copied.length)
+    expect(transferred.length).toBeGreaterThan(2)
+
+    for (let i = 0; i < transferred.length; i++) {
+      const a = transferred[i]!
+      const b = copied[i]!
+      expect(a.pcm.length).toBe(b.pcm.length)
+      expect(a.startSec).toBeCloseTo(b.startSec, 6)
+      expect(a.endSec).toBeCloseTo(b.endSec, 6)
+      expect(a.overlapUntilSec).toBeCloseTo(b.overlapUntilSec, 6)
+      expect(a.isLast).toBe(b.isLast)
+      expect(Array.from(a.pcm.slice(0, 64))).toEqual(Array.from(b.pcm.slice(0, 64)))
+      expect(Array.from(a.pcm.slice(-64))).toEqual(Array.from(b.pcm.slice(-64)))
+    }
+  })
+})
+
+describe('truncation strategies', () => {
+  it('both return the requested prefix', () => {
+    const source = () => Float32Array.from([1, 2, 3, 4, 5, 6])
+    expect(Array.from(copyTruncate(source(), 4))).toEqual([1, 2, 3, 4])
+    expect(Array.from(transferTruncate(source(), 4))).toEqual([1, 2, 3, 4])
+  })
+
+  it('copyTruncate leaves the original readable', () => {
+    const samples = Float32Array.from([1, 2, 3, 4])
+    copyTruncate(samples, 2)
+    expect(samples.length).toBe(4)
+  })
+
+  // The saving is exactly this: nothing is duplicated, so the source is gone.
+  it('transferTruncate detaches the original', () => {
+    const samples = Float32Array.from([1, 2, 3, 4])
+    transferTruncate(samples, 2)
+    expect(samples.length).toBe(0)
+  })
+
+  // A view into a shared buffer cannot be truncated in place without destroying
+  // whatever else points at it, so it has to fall back to copying.
+  it('transferTruncate copies instead when the array is a view', () => {
+    const backing = Float32Array.from([1, 2, 3, 4, 5, 6])
+    const view = backing.subarray(2)
+    const result = transferTruncate(view, 2)
+
+    expect(Array.from(result)).toEqual([3, 4])
+    expect(backing.length).toBe(6)
   })
 })

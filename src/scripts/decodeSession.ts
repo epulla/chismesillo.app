@@ -25,11 +25,43 @@ import {
 } from './windowing'
 import type { AudioWindow } from './types'
 
-export type OpenPayload = { file: File | Blob; windowSec: number }
+/**
+ * Cuts the first `length` samples out of a buffer into an array that owns its own
+ * ArrayBuffer, so it can be transferred to another worker.
+ *
+ * A seam so both strategies get exercised by the suite. `slice` doubles the peak —
+ * ~77 MB extra at a 20 minute window; `transfer` truncates in place but detaches
+ * the original, which is why the caller copies the overlap tail out first.
+ */
+export type TruncateHead = (samples: Float32Array, length: number) => Float32Array
+
+type TransferableBuffer = ArrayBuffer & { transfer?: (bytes?: number) => ArrayBuffer }
+
+export const copyTruncate: TruncateHead = (samples, length) => samples.slice(0, length)
+
+export const transferTruncate: TruncateHead = (samples, length) => {
+  const buffer = samples.buffer as TransferableBuffer
+  // A view into somebody else's buffer, or a runtime without ArrayBuffer.transfer
+  // (pre-114 Chrome, pre-17.4 Safari, pre-122 Firefox): copying is the only option.
+  if (samples.byteOffset !== 0 || typeof buffer.transfer !== 'function') {
+    return copyTruncate(samples, length)
+  }
+  return new Float32Array(buffer.transfer(length * Float32Array.BYTES_PER_ELEMENT))
+}
+
+const defaultTruncate: TruncateHead = transferTruncate
+
+export type OpenPayload = {
+  file: File | Blob
+  windowSec: number
+  /** Injected by tests to drive both truncation strategies. */
+  truncate?: TruncateHead
+}
 
 export class DecodeSession {
   private readonly file: File | Blob
   private readonly windowSec: number
+  private readonly truncate: TruncateHead
   private input: Input | null = null
   private conversion: Conversion | null = null
   private output: Output | null = null
@@ -50,9 +82,10 @@ export class DecodeSession {
   private failure: Error | null = null
   private disposed = false
 
-  constructor({ file, windowSec }: OpenPayload) {
+  constructor({ file, windowSec, truncate = defaultTruncate }: OpenPayload) {
     this.file = file
     this.windowSec = windowSec
+    this.truncate = truncate
   }
 
   async open() {
@@ -149,21 +182,27 @@ export class DecodeSession {
     const buffer = this.concatPending()
     const targetSec = this.pendingStartSec + this.windowSec
     const cutSec = findQuietCut(buffer, this.pendingStartSec, targetSec)
-    const cutIndex = Math.max(
-      Math.round(MIN_WINDOW_SEC * SAMPLE_RATE),
-      Math.round((cutSec - this.pendingStartSec) * SAMPLE_RATE)
+    const cutIndex = Math.min(
+      buffer.length,
+      Math.max(
+        Math.round(MIN_WINDOW_SEC * SAMPLE_RATE),
+        Math.round((cutSec - this.pendingStartSec) * SAMPLE_RATE)
+      )
     )
 
-    const pcm = buffer.slice(0, cutIndex)
     const startSec = this.pendingStartSec
     const endSec = startSec + cutIndex / SAMPLE_RATE
 
-    // Keep the last couple of seconds as context for the next window.
+    // Keep the last couple of seconds as context for the next window. This has to
+    // happen *before* the truncation below: the default strategy detaches `buffer`,
+    // so reading from it afterwards would throw on an empty array.
     const keepFrom = Math.max(0, cutIndex - OVERLAP_SEC * SAMPLE_RATE)
     const tail = buffer.slice(keepFrom)
     this.pending = tail.length ? [tail] : []
     this.pendingLength = tail.length
     this.pendingStartSec = startSec + keepFrom / SAMPLE_RATE
+
+    const pcm = this.truncate(buffer, cutIndex)
 
     await this.publish({
       index: this.windowIndex++,
