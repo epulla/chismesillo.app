@@ -21,8 +21,8 @@ importers:
         specifier: 5.7.4
         version: 5.7.4
       mediabunny:
-        specifier: 1.51.0
-        version: 1.51.0
+        specifier: 1.52.2
+        version: 1.52.2
       tailwindcss:
         specifier: 4.3.3
         version: 4.3.3
@@ -1895,8 +1895,8 @@ packages:
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
-  mediabunny@1.51.0:
-    resolution: {integrity: sha512-u327374xU8Ho0gCaMII7fUK8t0PnqkabCox1k8uUwvgvGb9o6YQGZEG2Qr4DTe7nTMpzfL7ukgnHDvDROySZ+Q==}
+  mediabunny@1.52.2:
+    resolution: {integrity: sha512-HIgqL2BAWsWJtaqZRrqcrv7cEajQtCT9noR0dO8cGLKZKML9mmL4BjZOtm6j5I9qAp0v/hr/NmRZhuR6HZyQ7Q==}
 
   micromark-util-character@2.1.1:
     resolution: {integrity: sha512-wv8tdUTJ3thSFFFJKtpYKOYiGP2+v96Hvk4Tu8KpCAsTMs6yi+nVmGh1syvSCsaxz45J6Jbw+9DD6g97+NV67Q==}
@@ -4290,7 +4290,7 @@ snapshots:
 
   mdn-data@2.27.1: {}
 
-  mediabunny@1.51.0:
+  mediabunny@1.52.2:
     dependencies:
       '@types/dom-mediacapture-transform': 0.1.12
       '@types/dom-webcodecs': 0.1.13
