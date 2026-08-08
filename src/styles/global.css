@@ -239,6 +239,14 @@
     @apply font-mono text-xs tabular-nums;
     color: var(--color-muted-content);
   }
+
+  /* A four-hour transcript is thousands of rows; skip layout and paint for the ones
+     offscreen. `auto` on the intrinsic size reuses each row's last real height, so the
+     scrollbar settles. Unlike `hidden`, `auto` still renders on focus and find-in-page. */
+  #segment-list > li {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 2.5rem;
+  }
 }
 
 @keyframes chisme-rise {

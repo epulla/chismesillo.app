@@ -8,7 +8,13 @@ import { enhanceLanguageSelect } from './languageCombobox'
 import { estimateWindowBytes } from './memoryEstimate'
 import { translatedKey } from './errorKeys'
 import { cachedModelBytes, clearModelCache, prettifyBytes } from './modelCache'
-import { deleteTranscript, fileKey, loadTranscript, saveTranscript } from './store'
+import {
+  deleteTranscript,
+  fileKey,
+  loadTranscript,
+  persistIntervalMs,
+  saveTranscript
+} from './store'
 import { countWords, downloadTranscript, formatClock, type ExportFormat } from './exports'
 import { countWindows, dropOverlapDuplicates, mergeSegments, offsetSegments } from './windowing'
 import { progressPercent, progressStats } from './progress'
@@ -17,14 +23,6 @@ import type { AudioWindow, Transcript, TranscriptSegment } from './types'
 const t = createTranslator()
 
 const SEARCH_DEBOUNCE_MS = 150
-
-/**
- * Floor between transcript writes. Saving is a full structured clone of a
- * transcript that only grows, so doing it after every window means cloning
- * hundreds of thousands of objects repeatedly on a long file. The run always
- * writes once more when it stops, so nothing is lost by waiting.
- */
-const PERSIST_INTERVAL_MS = 10_000
 
 const dom = {
   dropzone: el<HTMLLabelElement>(DOM_IDS.dropzone),
@@ -322,8 +320,9 @@ async function run() {
     persist(modelId, language, detectedLanguage, task, device, wordTimestamps)
     lastPersistAt = performance.now()
   }
+  // The run always writes once more when it stops, so waiting loses nothing.
   const saveThrottled = () => {
-    if (performance.now() - lastPersistAt >= PERSIST_INTERVAL_MS) save()
+    if (performance.now() - lastPersistAt >= persistIntervalMs(state.segments.length)) save()
   }
 
   try {

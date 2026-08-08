@@ -45,6 +45,19 @@ and must be rechecked after dependency upgrades.
    23176. Never catch that failure by reloading a `requiresWebGPU` model on WASM, which
    would start a multi-gigabyte CPU download.
 
-9. **State verification limits.** Repo tests have no WebGPU and download no models.
-   Worker changes are typechecked, not inference-tested. Report arithmetic separately
-   from benchmarks and require a browser run for dtype or transcript-quality changes.
+9. **Do not "optimize" a working fp32 encoder to fp16.** The pair this app ships —
+   `encoder_model: fp32`, `decoder_model_merged: q4` — is what both maintained HF
+   examples use on WebGPU (`realtime-whisper-webgpu`, and `whisper-word-timestamps`,
+   which is chunked with word timestamps like this app). The `// 'fp16' works too`
+   comment beside them is a compatibility note, not a benchmark, and it is contradicted
+   by transformers.js#1590 — open, labeled `bug`, reopened 2026-03-30 against a version
+   later than our pinned 4.2.0 — where the maintainer traces bad Whisper output to
+   "some precision loss in the new webgpu EP" and gets much better results by moving
+   the *encoder* back to fp32. Turbo is the sole exception: its fp32 encoder cannot be
+   allocated at all, so fp16-when-`shader-f16` is the least-bad rung, not an
+   optimization. The upside was never large either — the encoder is one forward pass
+   per 30 s chunk against an autoregressive decoder that is already q4.
+
+10. **State verification limits.** Repo tests have no WebGPU and download no models.
+    Worker changes are typechecked, not inference-tested. Report arithmetic separately
+    from benchmarks and require a browser run for dtype or transcript-quality changes.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { estimateWindowBytes } from './memoryEstimate'
 import { MODELS } from './models'
+import { countWhisperChunks } from './windowing'
 
 const MB = 1024 * 1024
 
@@ -50,6 +51,19 @@ describe('estimateWindowBytes', () => {
       const estimate = estimateWindowBytes(windowSec, 80)
       expect(Number.isFinite(estimate.total)).toBe(true)
       expect(estimate.total).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  /**
+   * This file used to keep its own copy of the chunk and stride constants and kept
+   * quoting stride 5 after the pipeline moved to 3, so the label was overcharging by
+   * a fifth. Pin the feature term to the counter the pipeline loop actually uses.
+   */
+  it('counts the same sub-chunks as the pipeline', () => {
+    for (const minutes of [2, 5, 20]) {
+      const windowSec = minutes * 60
+      const { featureBytes } = estimateWindowBytes(windowSec, 80)
+      expect(featureBytes).toBe(countWhisperChunks(windowSec) * 80 * 3000 * 4)
     }
   })
 

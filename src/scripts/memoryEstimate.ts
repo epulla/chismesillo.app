@@ -3,13 +3,9 @@
  * price of turning it up. Ignores the model weights, which dwarf all of this but
  * do not change with window size.
  */
-import { BOUNDARY_SEARCH_SEC, SAMPLE_RATE } from './windowing'
+import { BOUNDARY_SEARCH_SEC, countWhisperChunks, SAMPLE_RATE } from './windowing'
 
 const BYTES_PER_SAMPLE = 4
-
-/** Whisper's own sub-chunking, mirrored from the `recognizer()` call options. */
-const CHUNK_LENGTH_SEC = 30
-const STRIDE_LENGTH_SEC = 5
 
 /** Mel frames a 30 s chunk produces: 3000 at 16 kHz with a 160-sample hop. */
 const FRAMES_PER_CHUNK = 3000
@@ -36,8 +32,10 @@ export function estimateWindowBytes(windowSec: number, melBins: number): WindowM
   // The surprising term: the ASR pipeline builds input_features for *every* 30 s
   // sub-chunk before generating any tokens and holds them all until the window
   // finishes, so this grows with window size and cannot be tuned from outside.
-  const stepSec = CHUNK_LENGTH_SEC - 2 * STRIDE_LENGTH_SEC
-  const chunks = Math.max(1, Math.ceil(safeWindowSec / stepSec))
+  // Counted by windowing.ts rather than re-derived here: this file used to keep its
+  // own copy of the chunk and stride constants, and silently kept quoting stride 5
+  // after the pipeline moved to 3.
+  const chunks = countWhisperChunks(safeWindowSec)
   const featureBytes = chunks * melBins * FRAMES_PER_CHUNK * BYTES_PER_SAMPLE
 
   return { decodeBytes, pcmBytes, featureBytes, total: decodeBytes + pcmBytes + featureBytes }

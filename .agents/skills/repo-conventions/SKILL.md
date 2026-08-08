@@ -52,17 +52,14 @@ skill markdown — but they *are* committed. Keep them tidy by hand.
 
 ## Running the tooling
 
-`pnpm` is frequently not on `PATH` in this environment even though the repo pins it.
-Use corepack:
-
-```bash
-corepack pnpm test          # instead of `pnpm test`
-```
+`pnpm` is on `PATH` via fnm, at the version `packageManager` pins. Use it directly —
+`.github/workflows/ci.yml` does. If a shell somehow lacks it, `corepack pnpm <cmd>`
+reaches the same binary.
 
 The gate, identical to what CI runs on Node 22.13.0 **and** 24:
 
 ```bash
-corepack pnpm format:check && corepack pnpm check && corepack pnpm test && corepack pnpm build
+pnpm format:check && pnpm check && pnpm test && pnpm build
 ```
 
 `pnpm check` reporting `1 hint` is the pre-existing `store.ts` "may be converted to
