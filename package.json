@@ -20,17 +20,17 @@
   "dependencies": {
     "@huggingface/transformers": "4.2.0",
     "@tailwindcss/vite": "4.3.3",
-    "astro": "7.1.4",
+    "astro": "7.1.6",
     "daisyui": "5.7.4",
-    "mediabunny": "1.51.0",
+    "mediabunny": "1.52.2",
     "tailwindcss": "4.3.3"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
+    "@astrojs/check": "^0.9.10",
     "happy-dom": "^20.11.1",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
     "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "vitest": "^4.1.10"
   }
 }
