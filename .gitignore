@@ -25,3 +25,11 @@ pnpm-debug.log*
 # python bytecode from skill scripts
 __pycache__/
 *.pyc
+
+# local audio fixtures dropped in the repo root for manual testing
+*.m4a
+*.mp3
+*.wav
+*.mp4
+*.ogg
+*.flac

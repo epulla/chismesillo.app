@@ -49,6 +49,18 @@ export function saveTranscript(key: string, transcript: Transcript) {
   return withStore('readwrite', (store) => store.put(transcript, key))
 }
 
+/**
+ * How long a run should wait between transcript writes.
+ *
+ * `put` structured-clones the transcript, and the transcript only grows. A fixed
+ * floor means a four-hour file clones an ever-larger array on the main thread
+ * roughly fifteen hundred times, so the floor rises with the transcript instead.
+ * The cap is what bounds how much work a crash can cost.
+ */
+export function persistIntervalMs(segmentCount: number): number {
+  return Math.min(60_000, 10_000 * Math.max(1, Math.ceil(segmentCount / 2000)))
+}
+
 export function loadTranscript(key: string): Promise<Transcript | null> {
   return withStore<Transcript>('readonly', (store) => store.get(key)).then((value) => value ?? null)
 }
