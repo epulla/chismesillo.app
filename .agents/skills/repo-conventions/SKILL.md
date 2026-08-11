@@ -63,7 +63,9 @@ pnpm format:check && pnpm check && pnpm test && pnpm build
 ```
 
 `pnpm check` reporting `1 hint` is the pre-existing `store.ts` "may be converted to
-an async function" note. It is not an error and is not yours to fix.
+an async function" note. It is not an error and is not yours to fix. Any hint *beyond*
+that one came from your change — read it rather than assuming it is also baseline,
+which is easy to do when the count has drifted before.
 
 ## Tests you will trip without touching them
 
