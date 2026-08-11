@@ -8,10 +8,6 @@ export function show(node: HTMLElement, visible = true) {
   node.classList.toggle('hidden', !visible)
 }
 
-export function setText(node: HTMLElement, text: string) {
-  node.textContent = text
-}
-
 /** Locale-aware strings shipped by the server for the active page. */
 type Strings = Record<string, Record<string, string>>
 
@@ -26,8 +22,4 @@ export function createTranslator() {
       name in vars ? String(vars[name]) : match
     )
   }
-}
-
-export function currentLang(): string {
-  return (window as unknown as { __LANG__?: string }).__LANG__ ?? 'en'
 }

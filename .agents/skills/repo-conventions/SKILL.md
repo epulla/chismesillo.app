@@ -63,7 +63,9 @@ pnpm format:check && pnpm check && pnpm test && pnpm build
 ```
 
 `pnpm check` reporting `1 hint` is the pre-existing `store.ts` "may be converted to
-an async function" note. It is not an error and is not yours to fix.
+an async function" note. It is not an error and is not yours to fix. Any hint *beyond*
+that one came from your change — read it rather than assuming it is also baseline,
+which is easy to do when the count has drifted before.
 
 ## Tests you will trip without touching them
 
@@ -75,6 +77,7 @@ file you never opened. Each is listed with what actually fixes it.
 | `domIds.test.ts` | new `id="..."` in any `.astro` | add it to `DOM_IDS` in `domIds.ts` |
 | `domIds.test.ts` | an id declared in two components | ids must be unique across all markup |
 | `ui.test.ts` "identical key sets" | string added to `en` only | add the same key to `es` |
+| `ui.test.ts` "identical key sets" | string removed from `en` only | remove it from `es` too |
 | `ui.test.ts` "placeholders consistent" | `{n}` in one locale, missing in the other | match the placeholders |
 | `theme.test.ts` | colour changed in `global.css` or `theme.ts` | change both; the test re-derives contrast |
 | `securityHeaders.test.ts` | COOP/COEP edited in one place | `astro.config.mjs`, `public/_headers`, `vercel.json` must agree |

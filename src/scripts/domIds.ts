@@ -63,5 +63,3 @@ export const DOM_IDS = {
   dedicationTrigger: 'dedication-trigger',
   dedicationDialog: 'dedication-dialog'
 } as const
-
-export type DomId = (typeof DOM_IDS)[keyof typeof DOM_IDS]

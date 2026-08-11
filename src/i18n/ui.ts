@@ -13,7 +13,6 @@ export const ui = {
     a11y: {
       skipToContent: 'Skip to main content',
       languageNav: 'Language',
-      mainContent: 'Main content',
       statusRegion: 'Transcription status',
       transcriptionProgress: 'Transcription progress',
       downloadProgress: 'Model download progress',
@@ -91,11 +90,7 @@ export const ui = {
       speed: '{factor}× realtime'
     },
     downloads: {
-      title: 'Model downloads',
       whisper: 'Whisper model',
-      pending: 'Not downloaded yet',
-      ready: 'Ready',
-      failed: 'Download failed',
       cacheTitle: 'Cached models',
       cacheSize: 'Using {size} of storage',
       cacheEmpty: 'Nothing cached yet',
@@ -161,7 +156,6 @@ export const ui = {
     a11y: {
       skipToContent: 'Saltar al contenido principal',
       languageNav: 'Idioma',
-      mainContent: 'Contenido principal',
       statusRegion: 'Estado de la transcripción',
       transcriptionProgress: 'Progreso de la transcripción',
       downloadProgress: 'Progreso de la descarga del modelo',
@@ -240,11 +234,7 @@ export const ui = {
       speed: '{factor}× tiempo real'
     },
     downloads: {
-      title: 'Descarga del modelo',
       whisper: 'Modelo Whisper',
-      pending: 'Todavía sin descargar',
-      ready: 'Listo',
-      failed: 'La descarga ha fallado',
       cacheTitle: 'Modelos en caché',
       cacheSize: 'Ocupando {size} de almacenamiento',
       cacheEmpty: 'Nada en caché todavía',
