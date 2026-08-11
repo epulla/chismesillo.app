@@ -45,15 +45,3 @@ export type AudioWindow = {
   pcm: Float32Array
   isLast: boolean
 }
-
-export type WorkerRequest = {
-  id: number
-  type: string
-  payload?: unknown
-}
-
-export type WorkerResponse =
-  | { id: number; type: 'done'; result?: unknown }
-  | { id: number; type: 'error'; error: string }
-  | { type: 'progress'; key: string; payload: unknown }
-  | { type: 'event'; name: string; payload?: unknown }

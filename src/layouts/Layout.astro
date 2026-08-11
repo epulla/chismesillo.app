@@ -35,10 +35,7 @@ const strings = JSON.stringify(clientStrings(lang))
     <meta property="og:type" content="website" />
     <meta property="og:title" content={t('meta.title')} />
     <meta property="og:description" content={t('meta.description')} />
-    <script
-      is:inline
-      set:html={`window.__I18N__ = ${strings}; window.__LANG__ = ${JSON.stringify(lang)};`}
-    />
+    <script is:inline set:html={`window.__I18N__ = ${strings};`} />
   </head>
   <body class="flex min-h-dvh flex-col">
     <Backdrop />

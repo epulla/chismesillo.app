@@ -31,8 +31,6 @@ export const TOKENS = {
   'error-content': '#FFFFFF'
 } as const
 
-export type TokenName = keyof typeof TOKENS
-
 export const ROLES = [
   'primary',
   'secondary',
@@ -74,9 +72,8 @@ export const MUTED_CONTENT = '#6B5F58'
 /** Keyboard focus ring. Must clear 3:1 against every surface it can land on. */
 export const FOCUS_RING = '#A34E6B'
 
-/** WCAG 2.2 minimums. Large text is >=18.66px bold or >=24px. */
+/** WCAG 2.2 minimums: body text, and UI components or graphics. */
 export const AA_TEXT = 4.5
-export const AA_LARGE = 3
 export const AA_NON_TEXT = 3
 
 type Pair = {
