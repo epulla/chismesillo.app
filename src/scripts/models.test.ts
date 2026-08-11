@@ -78,7 +78,7 @@ describe('dtypeFor', () => {
   })
 
   it('refuses a WebGPU-only model on wasm with a translatable key', () => {
-    expect(() => dtypeFor('wasm', 'turbo')).toThrowError()
+    expect(() => dtypeFor('wasm', 'turbo')).toThrow()
     try {
       dtypeFor('wasm', 'turbo')
     } catch (error) {
