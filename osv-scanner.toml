@@ -8,3 +8,15 @@ reason = "sharp: transformers.js Node image backend, never bundled for the brows
 [[IgnoredVulns]]
 id = "GHSA-xcpc-8h2w-3j85"
 reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
+
+[[IgnoredVulns]]
+id = "GHSA-rgj7-g3m4-5g8c"
+reason = "sharp: transformers.js Node image backend, never bundled for the browser"
+
+[[IgnoredVulns]]
+id = "GHSA-7q85-xj36-vmfc"
+reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
+
+[[IgnoredVulns]]
+id = "GHSA-vwc7-r8mq-g2x9"
+reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
