@@ -25,12 +25,10 @@ const blobs = [
 ---
 
 <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-  {
-    blobs.map((blob) => (
-      <div
-        class:list={['motion-blob absolute rounded-full blur-3xl', blob.position, blob.tint]}
-        style={`--orb-opacity: ${blob.opacity}; --motion-delay: ${blob.delay}; --drift: chisme-drift-${blob.drift}`}
-      />
-    ))
-  }
+  {blobs.map((blob) => (
+    <div
+      class:list={['motion-blob absolute rounded-full blur-3xl', blob.position, blob.tint]}
+      style={`--orb-opacity: ${blob.opacity}; --motion-delay: ${blob.delay}; --drift: chisme-drift-${blob.drift}`}
+    />
+  ))}
 </div>

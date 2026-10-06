@@ -23,23 +23,19 @@ const bullets = [
     <h1 class="text-4xl leading-[1.05] font-semibold text-balance sm:text-6xl">
       {t('hero.title')}
     </h1>
-    <p class="text-muted mx-auto mt-6 max-w-xl text-lg text-pretty">
-      {t('hero.subtitle')}
-    </p>
+    <p class="text-muted mx-auto mt-6 max-w-xl text-lg text-pretty">{t('hero.subtitle')}</p>
     <ul class="mt-8 flex flex-wrap justify-center gap-2">
-      {
-        bullets.map((bullet, index) => (
-          <li
-            class:list={[
-              'motion-bullet rounded-full border border-base-300 px-4 py-1.5 text-sm font-medium',
-              bullet.tint
-            ]}
-            style={`--motion-delay: ${180 + index * 55}ms`}
-          >
-            {bullet.label}
-          </li>
-        ))
-      }
+      {bullets.map((bullet, index) => (
+        <li
+          class:list={[
+            'motion-bullet rounded-full border border-base-300 px-4 py-1.5 text-sm font-medium',
+            bullet.tint
+          ]}
+          style={`--motion-delay: ${180 + index * 55}ms`}
+        >
+          {bullet.label}
+        </li>
+      ))}
     </ul>
   </div>
 </section>

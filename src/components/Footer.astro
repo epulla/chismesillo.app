@@ -20,7 +20,9 @@ const t = useTranslations(lang)
     <div class="flex flex-col items-start gap-3">
       <div>
         <p class="text-sm font-semibold">{t('downloads.cacheTitle')}</p>
-        <p id="cache-size" class="text-muted text-xs">{t('downloads.cacheEmpty')}</p>
+        <p id="cache-size" class="text-muted text-xs">
+          {t('downloads.cacheEmpty')}
+        </p>
       </div>
       <button id="clear-cache" type="button" class="btn btn-outline btn-sm rounded-full" disabled>
         {t('downloads.clear')}
@@ -41,7 +43,9 @@ const t = useTranslations(lang)
 
   <dialog id="dedication-dialog" class="modal" aria-label={t('footer.dedicationTitle')}>
     <div class="dedication-box modal-box text-center">
-      <p class="easter-heart mx-auto mb-3 text-3xl" aria-hidden="true">♥</p>
+      <p class="easter-heart mx-auto mb-3 text-3xl" aria-hidden="true">
+        ♥
+      </p>
       <h2 class="text-2xl font-semibold">{t('footer.dedicationTitle')}</h2>
       <p class="mt-4 text-pretty text-base leading-relaxed">{t('footer.dedication')}</p>
       <form method="dialog" class="modal-action justify-center">

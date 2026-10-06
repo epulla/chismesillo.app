@@ -18,7 +18,9 @@ const t = useTranslations(lang)
   <div class="flex flex-wrap items-center gap-4">
     <span id="status-spinner" class="loading loading-spinner loading-md text-primary"></span>
     <div class="min-w-0 flex-1">
-      <p id="status-text" class="font-semibold">{t('status.preparing')}</p>
+      <p id="status-text" class="font-semibold">
+        {t('status.preparing')}
+      </p>
       <p id="status-detail" class="text-muted text-xs"></p>
     </div>
     <span id="status-percent" class="font-mono text-2xl tabular-nums"></span>
@@ -29,7 +31,8 @@ const t = useTranslations(lang)
     class="progress progress-primary mt-4 w-full"
     value="0"
     max="100"
-    aria-label={t('a11y.transcriptionProgress')}></progress>
+    aria-label={t('a11y.transcriptionProgress')}
+  ></progress>
 
   <p id="status-partial" class="text-muted mt-3 hidden truncate text-sm italic"></p>
 
@@ -47,11 +50,15 @@ const t = useTranslations(lang)
       class="progress progress-secondary flex-1"
       value="0"
       max="100"
-      aria-label={t('a11y.downloadProgress')}></progress>
+      aria-label={t('a11y.downloadProgress')}
+    ></progress>
     <span id="download-detail" class="text-muted font-mono text-xs tabular-nums"></span>
   </div>
 
-  <div id="warning-row" class="alert alert-soft alert-warning mt-4 hidden text-sm" role="status">
-  </div>
+  <div
+    id="warning-row"
+    class="alert alert-soft alert-warning mt-4 hidden text-sm"
+    role="status"
+  ></div>
   <div id="error-row" class="alert alert-soft alert-error mt-4 hidden text-sm" role="alert"></div>
 </section>

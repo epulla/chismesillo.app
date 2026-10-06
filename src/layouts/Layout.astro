@@ -23,15 +23,13 @@ const strings = JSON.stringify(clientStrings(lang))
     <title>{t('meta.title')}</title>
     <meta name="description" content={t('meta.description')} />
     <link rel="canonical" href={canonical} />
-    {
-      Object.keys(languages).map((code) => (
-        <link
-          rel="alternate"
-          hreflang={code}
-          href={new URL(code === 'en' ? '/' : `/${code}/`, Astro.site)}
-        />
-      ))
-    }
+    {Object.keys(languages).map((code) => (
+      <link
+        rel="alternate"
+        hreflang={code}
+        href={new URL(code === 'en' ? '/' : `/${code}/`, Astro.site)}
+      />
+    ))}
     <meta property="og:type" content="website" />
     <meta property="og:title" content={t('meta.title')} />
     <meta property="og:description" content={t('meta.description')} />

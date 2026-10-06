@@ -24,7 +24,8 @@ const formats = [
     <span id="word-count" class="badge badge-ghost badge-sm rounded-full"></span>
     <span
       id="detected-language"
-      class="badge badge-soft badge-secondary badge-sm hidden rounded-full"></span>
+      class="badge badge-soft badge-secondary badge-sm hidden rounded-full"
+    ></span>
     <button id="copy-button" type="button" class="btn btn-ghost btn-sm ml-auto rounded-full">
       {t('result.copy')}
     </button>
@@ -51,7 +52,9 @@ const formats = [
     <input id="search-input" type="search" class="grow" placeholder={t('result.search')} />
   </label>
 
-  <p id="transcript-empty" class="text-muted py-10 text-center text-sm">{t('result.empty')}</p>
+  <p id="transcript-empty" class="text-muted py-10 text-center text-sm">
+    {t('result.empty')}
+  </p>
   <ol id="segment-list" class="mt-3 flex max-h-[32rem] flex-col gap-0.5 overflow-y-auto pr-1"></ol>
   <p id="no-matches" class="text-muted hidden py-6 text-center text-sm">
     {t('result.noMatches')}
@@ -59,12 +62,10 @@ const formats = [
 
   <div class="mt-6 flex flex-wrap items-center gap-2 border-t border-base-300 pt-5">
     <span class="text-sm font-semibold">{t('export.title')}</span>
-    {
-      formats.map((format) => (
-        <button type="button" class="btn btn-outline btn-sm rounded-full" data-export={format.id}>
-          {format.label}
-        </button>
-      ))
-    }
+    {formats.map((format) => (
+      <button type="button" class="btn btn-outline btn-sm rounded-full" data-export={format.id}>
+        {format.label}
+      </button>
+    ))}
   </div>
 </section>

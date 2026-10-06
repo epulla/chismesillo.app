@@ -19,15 +19,15 @@ const t = useTranslations(lang)
     <fieldset class="fieldset">
       <legend class="fieldset-legend text-sm">{t('config.model')}</legend>
       <select id="model-select" class="select w-full">
-        {
-          MODELS.map((model) => (
-            <option value={model.id} data-requires-webgpu={String(model.requiresWebGPU)}>
-              {t(`models.${model.key}`)}
-            </option>
-          ))
-        }
+        {MODELS.map((model) => (
+          <option value={model.id} data-requires-webgpu={String(model.requiresWebGPU)}>
+            {t(`models.${model.key}`)}
+          </option>
+        ))}
       </select>
-      <p id="model-help" class="fieldset-label">{t('config.modelHelp')}</p>
+      <p id="model-help" class="fieldset-label">
+        {t('config.modelHelp')}
+      </p>
     </fieldset>
 
     <fieldset class="fieldset">
@@ -36,15 +36,15 @@ const t = useTranslations(lang)
       {/* Stays the value source and the no-JS fallback; the combobox hides it. */}
       <select id="language-select" class="select w-full">
         <option value="">{t('config.languageAuto')}</option>
-        {
-          WHISPER_LANGUAGES.map((language) => (
-            <option value={language.code}>{language.name}</option>
-          ))
-        }
+        {WHISPER_LANGUAGES.map((language) => (
+          <option value={language.code}>{language.name}</option>
+        ))}
       </select>
 
       <div id="language-combobox-wrap" class="relative hidden">
-        <label for="language-combobox" class="sr-only">{t('a11y.languageCombobox')}</label>
+        <label for="language-combobox" class="sr-only">
+          {t('a11y.languageCombobox')}
+        </label>
         <input
           id="language-combobox"
           type="text"
@@ -63,8 +63,7 @@ const t = useTranslations(lang)
           aria-label={t('config.language')}
           class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
           hidden
-        >
-        </ul>
+        ></ul>
         <p id="language-no-matches" class="fieldset-label hidden">
           {t('config.languageNoMatches')}
         </p>
@@ -96,7 +95,9 @@ const t = useTranslations(lang)
       <fieldset class="fieldset">
         <legend class="fieldset-legend text-sm">
           {t('config.windowMinutes')}
-          <span id="window-value" class="font-mono tabular-nums">5</span>
+          <span id="window-value" class="font-mono tabular-nums">
+            5
+          </span>
         </legend>
         <input
           id="window-minutes"
