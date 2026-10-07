@@ -11,5 +11,12 @@ auditConfig:
     - GHSA-rgj7-g3m4-5g8c
     - GHSA-7q85-xj36-vmfc
     - GHSA-vwc7-r8mq-g2x9
+    - GHSA-rcw4-f5rp-g42v
+    - GHSA-j5f4-cc29-5x44
+    - GHSA-p634-w6r4-rjp2
+    - GHSA-c6fg-446q-cg94
+    - GHSA-8238-w5pm-2374
+    - GHSA-wq5f-xc86-pv6w
+    - GHSA-hp3w-g68c-fv3c
 minimumReleaseAgeExclude:
   - astro@7.1.4

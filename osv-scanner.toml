@@ -20,3 +20,31 @@ reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is ne
 [[IgnoredVulns]]
 id = "GHSA-vwc7-r8mq-g2x9"
 reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
+
+[[IgnoredVulns]]
+id = "GHSA-rcw4-f5rp-g42v"
+reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
+
+[[IgnoredVulns]]
+id = "GHSA-j5f4-cc29-5x44"
+reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
+
+[[IgnoredVulns]]
+id = "GHSA-p634-w6r4-rjp2"
+reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
+
+[[IgnoredVulns]]
+id = "GHSA-c6fg-446q-cg94"
+reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
+
+[[IgnoredVulns]]
+id = "GHSA-8238-w5pm-2374"
+reason = "adm-zip: via onnxruntime-node, whose build is disabled and which is never loaded"
+
+[[IgnoredVulns]]
+id = "GHSA-wq5f-xc86-pv6w"
+reason = "sharp: transformers.js Node image backend, never bundled for the browser"
+
+[[IgnoredVulns]]
+id = "GHSA-hp3w-g68c-fv3c"
+reason = "sprintf-js: via onnxruntime-node>global-agent>roarr, never loaded; no patched 1.1.4 published yet"
