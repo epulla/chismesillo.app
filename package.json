@@ -22,7 +22,7 @@
     "@tailwindcss/vite": "4.3.3",
     "astro": "7.3.3",
     "daisyui": "5.7.43",
-    "mediabunny": "1.59.0",
+    "mediabunny": "1.61.1",
     "tailwindcss": "4.3.3"
   },
   "devDependencies": {
