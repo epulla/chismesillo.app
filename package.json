@@ -18,7 +18,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@huggingface/transformers": "4.2.0",
+    "@huggingface/transformers": "4.3.1",
     "@tailwindcss/vite": "4.3.3",
     "astro": "7.3.3",
     "daisyui": "5.7.47",
