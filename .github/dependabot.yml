@@ -7,9 +7,12 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
-      types:
+      minor-and-patch:
         patterns:
-          - '@types/*'
+          - '*'
+        update-types:
+          - minor
+          - patch
     commit-message:
       prefix: 'chore(deps)'
       prefix-development: 'chore(deps-dev)'
@@ -18,5 +21,9 @@ updates:
     directory: '/'
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns:
+          - '*'
     commit-message:
       prefix: 'chore(ci)'
