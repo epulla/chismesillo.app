@@ -44,4 +44,4 @@ jobs:
           osv-scanner --version
 
       - name: Run osv-scanner
-        run: osv-scanner --lockfile=pnpm-lock.yaml --config=osv-scanner.toml
+        run: osv-scanner --lockfile=pnpm-lock.yaml
