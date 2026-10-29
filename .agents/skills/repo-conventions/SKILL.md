@@ -56,7 +56,7 @@ skill markdown — but they *are* committed. Keep them tidy by hand.
 `.github/workflows/ci.yml` does. If a shell somehow lacks it, `corepack pnpm <cmd>`
 reaches the same binary.
 
-The gate, identical to what CI runs on Node 22.13.0 **and** 24:
+The gate, identical to what CI runs on Node 22.23.4 **and** 24:
 
 ```bash
 pnpm format:check && pnpm check && pnpm test && pnpm build

@@ -18,7 +18,7 @@ If you cannot agree to these terms, please do not submit the contribution.
 
 ## Development
 
-Use Node.js 22.13 or later and pnpm 11:
+Use Node.js 22.23.4 or later and pnpm 11:
 
 ```bash
 pnpm install
