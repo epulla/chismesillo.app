@@ -51,8 +51,8 @@ jobs:
       - id: meta
         uses: dependabot/fetch-metadata@v3
 
-      - name: Merge minor/patch updates
-        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+      - name: Merge minor/patch group
+        if: steps.meta.outputs.dependency-group == 'minor-and-patch'
         run: gh pr merge --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
