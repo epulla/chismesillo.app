@@ -5,3 +5,5 @@ allowBuilds:
   sharp: true
 minimumReleaseAgeExclude:
   - astro@7.1.4
+overrides:
+  '@napi-rs/wasm-runtime@1.2.4>@emnapi/runtime': 1.11.3
