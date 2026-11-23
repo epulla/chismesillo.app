@@ -20,9 +20,9 @@
   "dependencies": {
     "@huggingface/transformers": "4.3.2",
     "@tailwindcss/vite": "4.3.5",
-    "astro": "7.4.11",
-    "daisyui": "5.8.0",
-    "mediabunny": "1.66.0",
+    "astro": "7.4.13",
+    "daisyui": "5.8.1",
+    "mediabunny": "1.66.2",
     "tailwindcss": "4.3.5"
   },
   "devDependencies": {
@@ -31,6 +31,6 @@
     "prettier": "^3.10.1",
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "^6.0.3",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   }
 }
